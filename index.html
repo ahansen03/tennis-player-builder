@@ -77,7 +77,6 @@ body{
   border:1px solid var(--navy-light);
   border-radius:2px;
 }
-/* top/bottom fade */
 .slot-window::before,.slot-window::after{
   content:'';position:absolute;left:0;right:0;z-index:2;pointer-events:none;
 }
@@ -102,7 +101,6 @@ body{
 .player-item{font-size:12px;font-weight:600;color:var(--chalk)}
 .player-item-sub{font-size:9px;color:var(--chalk-dim);font-family:'DM Mono',monospace;margin-top:2px}
 
-/* center highlight bar */
 .slot-highlight{
   position:absolute;
   top:50%;transform:translateY(-50%);
@@ -199,7 +197,6 @@ body{
 .ac-bar{background:rgba(255,255,255,0.07);height:3px;border-radius:2px;margin-top:7px}
 .ac-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green),var(--gold));transition:width .5s ease}
 
-/* color coding score bars */
 .score-low .ac-fill{background:linear-gradient(90deg,#7a2020,#c45050)}
 .score-mid .ac-fill{background:linear-gradient(90deg,#6b5010,var(--clay))}
 .score-high .ac-fill{background:linear-gradient(90deg,var(--green),var(--gold))}
@@ -378,16 +375,8 @@ let state = {
 // ── ENGINE INITIALIZATION ────────────────────────────────────────────────────
 async function loadTennisData() {
   try {
-    // Dynamically safely resolve relative vs sub-folder paths on GitHub Pages
-    let csvPath = 'updated_tennis_data.csv';
-    if (window.location.hostname.includes('github.io')) {
-      const pathSegments = window.location.pathname.split('/').filter(Boolean);
-      if (pathSegments.length > 0) {
-        csvPath = `/${pathSegments[0]}/updated_tennis_data.csv`;
-      }
-    }
-
-    const response = await fetch(csvPath);
+    // Streamlined relative path resolution
+    const response = await fetch('./updated_tennis_data.csv');
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const csvText = await response.text();
     
