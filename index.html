@@ -472,7 +472,6 @@ function doSpin() {
   document.getElementById('attr-section').style.display = 'none';
   setStatus('Spinning...');
 
-  // 1. Pick randomized targets
   const targetYearIdx = Math.floor(Math.random() * YEARS.length);
   const targetYear = YEARS[targetYearIdx];
   
@@ -480,18 +479,24 @@ function doSpin() {
   const targetPlayerIdx = Math.floor(Math.random() * players.length);
   const [targetPlayerName, targetPlayerData] = players[targetPlayerIdx];
 
-  // 2. Refresh player reel structural layout for the current year context
+  // Regrow the dynamic player list for the selected year block
   buildPlayerReel(targetYear);
 
-  // 3. Fire native CSS hardware-accelerated animations
-  // Extra multipliers ensure the reel makes several full loops before settling
-  spinReelCSS('reel-year', YEARS.length, targetYearIdx, 3);
+  // Spin the year reel, and grab its freshly cloned element node
+  const activeYearReel = spinReelCSS('reel-year', YEARS.length, targetYearIdx, 3);
   
-  // The player reel runs slightly longer to create a organic, sequential stop
+  // Spin the player reel, passing a callback that fires when it finishes settling
   spinReelCSS('reel-player', players.length, targetPlayerIdx, 4, () => {
     state.spinning = false;
     state.currentYear = targetYear;
     state.currentPlayer = targetPlayerName;
+    
+    // Safely shift the independent Year Reel structural view back to its baseline single-loop index position
+    if (activeYearReel) {
+      activeYearReel.style.transition = 'none';
+      activeYearReel.style.transform = `translate3d(0, -${(YEARS.length + targetYearIdx) * ITEM_H}px, 0)`;
+    }
+
     showResult(targetPlayerName, targetYear, targetPlayerData);
     document.getElementById('spin-btn').disabled = false;
   });
@@ -499,9 +504,9 @@ function doSpin() {
 
 function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
   const reel = document.getElementById(reelId);
-  if (!reel) return;
+  if (!reel) return null;
 
-  // Clear any existing active event listeners to prevent overlaps
+  // Clone the element node cleanly to flush stale hardware transform tracking states
   const newReel = reel.cloneNode(true);
   reel.parentNode.replaceChild(newReel, reel);
 
@@ -509,24 +514,23 @@ function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
   const landOffset = startOffset + (targetIdx * ITEM_H);
   const finalScrollDistance = (loops * totalItems * ITEM_H) + landOffset;
 
-  // Snaps instantly back to base baseline view without animation overhead
+  // Place instantly at structural initialization coordinates
   newReel.style.transition = 'none';
   newReel.style.transform = `translate3d(0, -${startOffset}px, 0)`;
 
-  // Force a minor DOM reflow trigger so the browser registers the reset position before transitioning
+  // Force reflow layout updates before releasing the animation path execution
   newReel.offsetHeight;
 
-  // Execute smooth hardware transition down to the target index spot
+  // Engage native GPU transition
   newReel.style.transition = 'transform 2.8s cubic-bezier(0.15, 0.85, 0.35, 1)';
   newReel.style.transform = `translate3d(0, -${finalScrollDistance}px, 0)`;
 
-  // Listen for the native transition engine to end
   if (onDone) {
     newReel.addEventListener('transitionend', function handleEnd(e) {
       if (e.propertyName === 'transform') {
         newReel.removeEventListener('transitionend', handleEnd);
         
-        // Quietly reset layout structural position to single-loop index without visual jumps
+        // Return to unified base structural coordinates without causing layout flickering
         newReel.style.transition = 'none';
         newReel.style.transform = `translate3d(0, -${startOffset + (targetIdx * ITEM_H)}px, 0)`;
         
@@ -534,6 +538,9 @@ function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
       }
     });
   }
+
+  // Pass element node tracking reference back out to the main event pipeline loop
+  return newReel;
 }
 
 // ── RESULTS & CARD RENDERING ─────────────────────────────────────────────────
