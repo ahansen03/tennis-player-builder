@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- PapaParse CDN added correctly outside of the style tags -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 :root{
   --navy:#0A1628;
@@ -309,7 +311,7 @@ body{
       </div>
     </div>
 
-    <p class="status" id="status">Spin to draw a player</p>
+    <p class="status" id="status">Loading tennis database...</p>
     <button class="spin-btn" id="spin-btn" onclick="doSpin()">▶ SPIN</button>
 
     <!-- RESULT -->
@@ -357,27 +359,44 @@ body{
 </div>
 
 <script>
-// ── STATIC DATA ─────────────────────────────────────────────────────────────
-// 1. Declare empty objects/arrays for dynamic loading
+// ── DATA AND CONFIG ─────────────────────────────────────────────────────────
 let RAW = {};
 let YEARS = [];
 
-// 2. Async function to fetch and properly structure the data
+const ATTRS = [
+  {key:'overall',  label:'Overall',  icon:'👑'},
+  {key:'serve',    label:'Serve',    icon:'⚡'},
+  {key:'return',   label:'Return',   icon:'🔄'},
+  {key:'pressure', label:'Pressure', icon:'🔥'},
+  {key:'forehand', label:'Forehand', icon:'🎾'},
+  {key:'backhand', label:'Backhand', icon:'↩️'},
+  {key:'volley',   label:'Volley',   icon:'🥅'},
+];
+
+const ITEM_H = 72;
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  spinning: false,
+  currentYear: null,
+  currentPlayer: null,
+  drafted: {},
+};
+
+// ── ENGINE INITIALIZATION ────────────────────────────────────────────────────
 async function loadTennisData() {
   try {
     const response = await fetch('updated_tennis_data.csv');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const csvText = await response.text();
     
-    // Parse the CSV text using PapaParse
     const parsed = Papa.parse(csvText, { 
       header: true, 
       dynamicTyping: true,
       skipEmptyLines: true 
     });
     
-    // Process and restructure into the format the game expects
     parsed.data.forEach(row => {
-      // Map the CSV headers directly to the variables
       const year = row.year;
       const player = row.player_name;
       
@@ -388,7 +407,6 @@ async function loadTennisData() {
         RAW[yearStr] = {};
       }
       
-      // Map the CSV values to the internal keys used by index.html
       RAW[yearStr][player] = {
         rank: row.rank,
         country: row.player_country,
@@ -402,66 +420,45 @@ async function loadTennisData() {
       };
     });
 
-    // Dynamically generate the sorted YEARS array based on your CSV data
     YEARS = Object.keys(RAW).sort();
-
-    // 3. Kick off the application layout setup
+    
+    // UI Layout initialized safely only after data array is built
     initGame();
     
   } catch (error) {
     console.error("Error loading or parsing tennis CSV data:", error);
-    document.getElementById('status').textContent = "Error loading live tennis database.";
+    document.getElementById('status').textContent = "Error loading live tennis database. Verify updated_tennis_data.csv exists.";
   }
 }
 
-// 4. Group all initialization actions together
 function initGame() {
   buildYearReel();
   if (YEARS.length > 0) {
     buildPlayerReel(YEARS[0]);
   }
+  setStatus('Spin to draw a player');
   renderDraftBoard();
 }
 
-// Fire the data engine when the window is loaded
+// Fire async workflow on page load
 window.onload = loadTennisData;
 
-const ATTRS = [
-  {key:'overall',  label:'Overall',  icon:'👑'},
-  {key:'serve',    label:'Serve',    icon:'⚡'},
-  {key:'return',   label:'Return',   icon:'🔄'},
-  {key:'pressure', label:'Pressure', icon:'🔥'},
-  {key:'forehand', label:'Forehand', icon:'🎾'},
-  {key:'backhand', label:'Backhand', icon:'↩️'},
-  {key:'volley',   label:'Volley',   icon:'🥅'},
-];
-
-// ── STATE ────────────────────────────────────────────────────────────────────
-let state = {
-  spinning: false,
-  currentYear: null,
-  currentPlayer: null,
-  drafted: {},   // {key: {player,year,score,label,icon}}
-};
-
-// ── REEL SETUP ───────────────────────────────────────────────────────────────
-const ITEM_H = 72;
-
+// ── REEL UI BUILDERS ─────────────────────────────────────────────────────────
 function buildYearReel() {
   const reel = document.getElementById('reel-year');
-  // Triple for seamless looping feel
+  if (!reel || YEARS.length === 0) return;
   const items = [...YEARS,...YEARS,...YEARS];
   reel.innerHTML = items.map(y=>`
     <div class="slot-item">
       <div class="slot-item-inner year-item">${y}</div>
     </div>`).join('');
-  // start in middle section
   reel.style.transform = `translateY(-${YEARS.length * ITEM_H}px)`;
 }
 
 function buildPlayerReel(year) {
-  const players = Object.entries(RAW[year]).sort((a,b)=>a[1].rank-b[1].rank);
   const reel = document.getElementById('reel-player');
+  if (!reel || !RAW[year]) return;
+  const players = Object.entries(RAW[year]).sort((a,b)=>a[1].rank-b[1].rank);
   const items = [...players,...players,...players];
   reel.innerHTML = items.map(([name,d])=>`
     <div class="slot-item">
@@ -473,12 +470,10 @@ function buildPlayerReel(year) {
   reel.style.transform = `translateY(-${players.length * ITEM_H}px)`;
 }
 
-buildYearReel();
-buildPlayerReel(YEARS[0]);
-
-// ── SPIN ─────────────────────────────────────────────────────────────────────
+// ── SPIN ENGINE ──────────────────────────────────────────────────────────────
 function doSpin() {
   if (state.spinning) return;
+  if (YEARS.length === 0) return;
   if (Object.keys(state.drafted).length === 7) {
     setStatus('All 7 attributes drafted! Start over to play again.', true);
     return;
@@ -490,20 +485,16 @@ function doSpin() {
   document.getElementById('attr-section').style.display = 'none';
   setStatus('Spinning...');
 
-  // Pick targets
   const targetYearIdx = Math.floor(Math.random() * YEARS.length);
   const targetYear = YEARS[targetYearIdx];
   const players = Object.entries(RAW[targetYear]).sort((a,b)=>a[1].rank-b[1].rank);
   const targetPlayerIdx = Math.floor(Math.random() * players.length);
   const [targetPlayerName, targetPlayerData] = players[targetPlayerIdx];
 
-  // Build player reel for chosen year
   buildPlayerReel(targetYear);
 
-  // Animate both reels
   spinReel('reel-year', YEARS.length, targetYearIdx, 4 + Math.random()*3, () => {});
   spinReel('reel-player', players.length, targetPlayerIdx, 5 + Math.random()*4, () => {
-    // Both done (player reel finishes last)
     state.spinning = false;
     state.currentYear = targetYear;
     state.currentPlayer = targetPlayerName;
@@ -514,33 +505,23 @@ function doSpin() {
 
 function spinReel(reelId, totalItems, targetIdx, extraSpins, onDone) {
   const reel = document.getElementById(reelId);
-
-  // Start from middle section (offset = totalItems * ITEM_H)
   const startOffset = totalItems * ITEM_H;
-  // Land on target in middle section
   const landOffset = totalItems * ITEM_H + targetIdx * ITEM_H;
-  // Add extra full spins
   const totalScroll = extraSpins * totalItems * ITEM_H + (landOffset - startOffset);
   const endOffset = startOffset + totalScroll;
-
   const duration = 2200 + Math.random() * 800;
   const startTime = performance.now();
 
-  // Reset to start
   reel.style.transition = 'none';
   reel.style.transform = `translateY(-${startOffset}px)`;
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      function easeOut(t) {
-        return 1 - Math.pow(1 - t, 3.5);
-      }
-
+      function easeOut(t) { return 1 - Math.pow(1 - t, 3.5); }
       function step(now) {
         const elapsed = now - startTime;
         const t = Math.min(elapsed / duration, 1);
         const offset = startOffset + (endOffset - startOffset) * easeOut(t);
-        reel.style.transition = 'none';
         reel.style.transform = `translateY(-${offset}px)`;
 
         if (t < 1) {
@@ -555,7 +536,7 @@ function spinReel(reelId, totalItems, targetIdx, extraSpins, onDone) {
   });
 }
 
-// ── RESULT ───────────────────────────────────────────────────────────────────
+// ── RESULTS & CARD RENDERING ─────────────────────────────────────────────────
 function showResult(name, year, data) {
   document.getElementById('rp-name').textContent = name;
   document.getElementById('rp-year').textContent = year;
@@ -595,7 +576,7 @@ function renderAttrCards(data) {
   });
 }
 
-// ── DRAFT ────────────────────────────────────────────────────────────────────
+// ── DRAFT BOARD ENGINE ───────────────────────────────────────────────────────
 function draftAttr(attr, score) {
   state.drafted[attr.key] = {
     player: state.currentPlayer,
@@ -605,7 +586,6 @@ function draftAttr(attr, score) {
     icon: attr.icon,
   };
   renderDraftBoard();
-  // Re-render cards so drafted one goes grey
   const data = RAW[state.currentYear][state.currentPlayer];
   renderAttrCards(data);
 
@@ -619,15 +599,12 @@ function draftAttr(attr, score) {
   }
 }
 
-// ── DRAFT BOARD ──────────────────────────────────────────────────────────────
 function renderDraftBoard() {
   const container = document.getElementById('db-slots');
-  if (!container) return; // Guard clause in case DOM isn't ready
-  
+  if (!container) return;
   container.innerHTML = '';
   let total = 0, count = 0;
 
-  // Global variables check: Ensure ATTRS is defined before rendering empty state
   if (typeof ATTRS !== 'undefined' && Array.isArray(ATTRS)) {
     ATTRS.forEach(a => {
       const d = state.drafted[a.key];
@@ -671,7 +648,6 @@ function renderDraftBoard() {
   }
 }
 
-// ── RESET ────────────────────────────────────────────────────────────────────
 function resetGame() {
   state = {spinning:false, currentYear:null, currentPlayer:null, drafted:{}};
   document.getElementById('result-panel').classList.remove('show');
@@ -681,7 +657,6 @@ function resetGame() {
   document.getElementById('db-ov-val').textContent = '—';
   document.getElementById('db-ov-fill').style.width = '0%';
   buildYearReel();
-  // Safe-guard in case YEARS array hasn't resolved from the CSV fetch yet
   if (typeof YEARS !== 'undefined' && YEARS.length > 0) {
     buildPlayerReel(YEARS[0]);
   }
@@ -695,8 +670,6 @@ function setStatus(msg, hi=false) {
   el.textContent = msg;
   el.className = 'status' + (hi ? ' hi' : '');
 }
-
-renderDraftBoard();
 </script>
 </body>
 </html>
