@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- PapaParse CDN added correctly outside of the style tags -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
@@ -285,12 +284,9 @@ body{
 
 <div class="wrap">
 
-  <!-- LEFT -->
   <div class="slots-area">
 
-    <!-- SLOT MACHINE -->
     <div class="slot-machine">
-      <!-- YEAR reel -->
       <div class="slot-col">
         <div class="slot-label">Year</div>
         <div class="slot-window" id="sw-year">
@@ -301,7 +297,6 @@ body{
 
       <div class="slot-divider"></div>
 
-      <!-- PLAYER reel -->
       <div class="slot-col">
         <div class="slot-label">Player</div>
         <div class="slot-window" id="sw-player">
@@ -314,7 +309,6 @@ body{
     <p class="status" id="status">Loading tennis database...</p>
     <button class="spin-btn" id="spin-btn" onclick="doSpin()">▶ SPIN</button>
 
-    <!-- RESULT -->
     <div class="result-panel" id="result-panel">
       <div class="rp-top">
         <div>
@@ -329,7 +323,6 @@ body{
       </div>
     </div>
 
-    <!-- ATTRIBUTES -->
     <div class="attr-section" id="attr-section" style="display:none">
       <div class="attr-section-lbl">Pick an attribute to draft</div>
       <div class="attr-grid" id="attr-grid"></div>
@@ -337,7 +330,6 @@ body{
 
   </div>
 
-  <!-- RIGHT: DRAFT BOARD -->
   <div class="draft-board">
     <div class="complete-banner" id="complete-banner">
       <h3>🏆 Build Complete!</h3>
@@ -386,7 +378,16 @@ let state = {
 // ── ENGINE INITIALIZATION ────────────────────────────────────────────────────
 async function loadTennisData() {
   try {
-    const response = await fetch('updated_tennis_data.csv');
+    // Dynamically safely resolve relative vs sub-folder paths on GitHub Pages
+    let csvPath = 'updated_tennis_data.csv';
+    if (window.location.hostname.includes('github.io')) {
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      if (pathSegments.length > 0) {
+        csvPath = `/${pathSegments[0]}/updated_tennis_data.csv`;
+      }
+    }
+
+    const response = await fetch(csvPath);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const csvText = await response.text();
     
