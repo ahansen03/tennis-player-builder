@@ -376,7 +376,7 @@ let state = {
 async function loadTennisData() {
   try {
     // Streamlined relative path resolution
-    const response = await fetch('./updated_tennis_data.csv');
+    const response = await fetch('./updated_tennis_data');
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const csvText = await response.text();
     
