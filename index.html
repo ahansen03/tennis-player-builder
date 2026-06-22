@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --navy:#0A1628;
+  --navy-mid:#122040;
+  --navy-light:#1a2d54;
+  --navy-card:#0f1e3a;
+  --clay:#C17F3E;
+  --clay-light:#d4975a;
+  --green:#2D5A27;
+  --green-bright:#3a7a32;
+  --chalk:#F5F0E8;
+  --chalk-dim:#9a9080;
+  --gold:#D4AF37;
+  --gold-light:#e8ca55;
+  --red:#e05252;
+  --border:rgba(255,255,255,0.07);
+}
+
+body{
+  background:var(--navy);
+  color:var(--chalk);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── HEADER ── */
+.hdr{text-align:center;padding:22px 16px 0}
+.hdr-eye{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--clay);margin-bottom:5px}
+.hdr h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5.5vw,58px);letter-spacing:2px;line-height:1;color:var(--chalk)}
+.hdr h1 span{color:var(--gold)}
+.hdr-sub{font-size:12px;color:var(--chalk-dim);margin-top:5px;font-weight:300}
+
+/* ── LAYOUT ── */
+.wrap{
+  display:grid;
+  grid-template-columns:1fr 320px;
+  gap:20px;
+  max-width:1080px;
+  margin:18px auto 40px;
+  padding:0 16px;
+}
+@media(max-width:720px){.wrap{grid-template-columns:1fr}}
+
+/* ── SLOT MACHINE ── */
+.slots-area{display:flex;flex-direction:column;align-items:center;gap:16px}
+
+.slot-machine{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  background:var(--navy-card);
+  border:1px solid var(--border);
+  border-top:3px solid var(--gold);
+  padding:20px 24px 24px;
+  width:100%;
+}
+
+.slot-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+.slot-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--clay)}
+
+.slot-window{
+  width:100%;
+  height:72px;
+  overflow:hidden;
+  position:relative;
+  background:#060e1c;
+  border:1px solid var(--navy-light);
+  border-radius:2px;
+}
+/* top/bottom fade */
+.slot-window::before,.slot-window::after{
+  content:'';position:absolute;left:0;right:0;z-index:2;pointer-events:none;
+}
+.slot-window::before{top:0;height:20px;background:linear-gradient(to bottom,#060e1c,transparent)}
+.slot-window::after{bottom:0;height:20px;background:linear-gradient(to top,#060e1c,transparent)}
+
+.slot-reel{
+  display:flex;
+  flex-direction:column;
+  transition:transform 0s;
+}
+.slot-item{
+  height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 8px;
+  text-align:center;
+}
+.slot-item-inner{line-height:1.2}
+.year-item{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--gold);letter-spacing:1px}
+.player-item{font-size:12px;font-weight:600;color:var(--chalk)}
+.player-item-sub{font-size:9px;color:var(--chalk-dim);font-family:'DM Mono',monospace;margin-top:2px}
+
+/* center highlight bar */
+.slot-highlight{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  left:0;right:0;height:72px;
+  border-top:1px solid var(--gold);
+  border-bottom:1px solid var(--gold);
+  pointer-events:none;
+  z-index:1;
+}
+
+.slot-divider{
+  width:1px;
+  background:var(--border);
+  align-self:stretch;
+  margin:0 4px;
+}
+
+/* ── SPIN BTN ── */
+.spin-btn{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px;
+  letter-spacing:2px;
+  background:var(--clay);
+  color:var(--chalk);
+  border:none;
+  padding:13px 52px;
+  cursor:pointer;
+  transition:background .15s,transform .1s;
+  clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+  width:100%;
+  max-width:340px;
+}
+.spin-btn:hover:not(:disabled){background:var(--clay-light);transform:translateY(-1px)}
+.spin-btn:active:not(:disabled){transform:translateY(0)}
+.spin-btn:disabled{opacity:.38;cursor:not-allowed}
+
+/* ── RESULT PANEL ── */
+.result-panel{
+  width:100%;
+  background:var(--navy-card);
+  border:1px solid var(--border);
+  border-left:3px solid var(--gold);
+  padding:16px 20px;
+  display:none;
+}
+.result-panel.show{display:block}
+.rp-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.rp-name{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;line-height:1;color:var(--chalk)}
+.rp-year{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)}
+.rp-meta{font-size:11px;color:var(--chalk-dim);margin-top:3px;font-family:'DM Mono',monospace}
+.rp-badge{
+  background:var(--navy-light);
+  border:1px solid var(--gold);
+  padding:6px 12px;
+  text-align:center;
+  flex-shrink:0;
+}
+.rp-badge-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);line-height:1}
+.rp-badge-lbl{font-size:9px;color:var(--chalk-dim);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+
+/* ── ATTRIBUTE GRID ── */
+.attr-section{width:100%}
+.attr-section-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--clay);margin-bottom:10px}
+
+.attr-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:8px;
+}
+
+.attr-card{
+  background:var(--navy-mid);
+  border:1px solid var(--border);
+  padding:12px 14px;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .18s,transform .12s;
+}
+.attr-card::after{
+  content:'';position:absolute;bottom:0;left:0;height:2px;width:0;
+  background:var(--gold);transition:width .25s;
+}
+.attr-card:hover:not(.drafted)::after{width:100%}
+.attr-card:hover:not(.drafted){border-color:rgba(212,175,55,.4);transform:translateY(-1px)}
+.attr-card.drafted{
+  opacity:.28;cursor:not-allowed;pointer-events:none;
+}
+.attr-card.drafted::after{display:none}
+
+.ac-name{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--chalk-dim);margin-bottom:5px}
+.ac-score{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--chalk)}
+.ac-score sup{font-size:13px;color:var(--chalk-dim)}
+.ac-bar{background:rgba(255,255,255,0.07);height:3px;border-radius:2px;margin-top:7px}
+.ac-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green),var(--gold));transition:width .5s ease}
+
+/* color coding score bars */
+.score-low .ac-fill{background:linear-gradient(90deg,#7a2020,#c45050)}
+.score-mid .ac-fill{background:linear-gradient(90deg,#6b5010,var(--clay))}
+.score-high .ac-fill{background:linear-gradient(90deg,var(--green),var(--gold))}
+
+/* ── STATUS ── */
+.status{
+  font-size:12px;color:var(--chalk-dim);
+  font-style:italic;text-align:center;min-height:18px;
+}
+.status.hi{color:var(--gold);font-style:normal;font-weight:500}
+
+/* ── DRAFT BOARD ── */
+.draft-board{
+  background:var(--navy-card);
+  border:1px solid var(--border);
+  border-top:3px solid var(--clay);
+  padding:18px;
+  position:sticky;top:16px;height:fit-content;
+}
+.db-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--chalk)}
+.db-sub{font-size:11px;color:var(--chalk-dim);font-weight:300;margin-bottom:14px}
+
+.db-slot{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 0;
+  border-bottom:1px solid var(--border);
+}
+.db-slot:last-of-type{border-bottom:none}
+
+.db-icon{
+  width:32px;height:32px;
+  background:var(--navy-light);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;border-radius:2px;
+}
+.db-icon.filled{background:var(--green);border-color:var(--green-bright)}
+
+.db-info{flex:1;min-width:0}
+.db-attr-name{font-family:'DM Mono',monospace;font-size:9px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:1px}
+.db-player{font-size:12px;font-weight:600;color:var(--chalk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-empty{font-size:11px;color:rgba(255,255,255,.18);font-style:italic}
+.db-score{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);flex-shrink:0}
+.db-score.empty{color:rgba(255,255,255,.15)}
+
+/* overall */
+.db-overall{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.db-ov-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.db-ov-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--clay);text-transform:uppercase;letter-spacing:2px}
+.db-ov-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold)}
+.db-ov-bar{background:rgba(255,255,255,.07);height:5px;border-radius:3px}
+.db-ov-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--clay),var(--gold));transition:width .7s ease}
+
+.reset-btn{
+  margin-top:12px;width:100%;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  background:transparent;color:var(--chalk-dim);
+  border:1px solid rgba(255,255,255,.09);padding:9px;cursor:pointer;
+  transition:border-color .18s,color .18s;
+}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* complete */
+.complete-banner{
+  display:none;
+  background:linear-gradient(135deg,rgba(45,90,39,.6),rgba(18,32,64,.8));
+  border:1px solid var(--gold);
+  padding:12px 16px;text-align:center;margin-bottom:14px;
+}
+.complete-banner.show{display:block}
+.complete-banner h3{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--gold)}
+.complete-banner p{font-size:11px;color:var(--chalk-dim);margin-top:2px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-eye">ATP Top 10 · 2000–2025</div>
+  <h1>BUILD THE <span>GOAT</span></h1>
+  <p class="hdr-sub">Spin the reels · Draft attributes · Assemble your ultimate player</p>
+</div>
+
+<div class="wrap">
+
+  <!-- LEFT -->
+  <div class="slots-area">
+
+    <!-- SLOT MACHINE -->
+    <div class="slot-machine">
+      <!-- YEAR reel -->
+      <div class="slot-col">
+        <div class="slot-label">Year</div>
+        <div class="slot-window" id="sw-year">
+          <div class="slot-highlight"></div>
+          <div class="slot-reel" id="reel-year"></div>
+        </div>
+      </div>
+
+      <div class="slot-divider"></div>
+
+      <!-- PLAYER reel -->
+      <div class="slot-col">
+        <div class="slot-label">Player</div>
+        <div class="slot-window" id="sw-player">
+          <div class="slot-highlight"></div>
+          <div class="slot-reel" id="reel-player"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="status" id="status">Spin to draw a player</p>
+    <button class="spin-btn" id="spin-btn" onclick="doSpin()">▶ SPIN</button>
+
+    <!-- RESULT -->
+    <div class="result-panel" id="result-panel">
+      <div class="rp-top">
+        <div>
+          <div class="rp-name" id="rp-name">—</div>
+          <div class="rp-year" id="rp-year">—</div>
+          <div class="rp-meta" id="rp-meta">—</div>
+        </div>
+        <div class="rp-badge">
+          <div class="rp-badge-num" id="rp-rank">—</div>
+          <div class="rp-badge-lbl">Year-end rank</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTRIBUTES -->
+    <div class="attr-section" id="attr-section" style="display:none">
+      <div class="attr-section-lbl">Pick an attribute to draft</div>
+      <div class="attr-grid" id="attr-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: DRAFT BOARD -->
+  <div class="draft-board">
+    <div class="complete-banner" id="complete-banner">
+      <h3>🏆 Build Complete!</h3>
+      <p>Your ultimate player is assembled.</p>
+    </div>
+    <div class="db-title">Your Player</div>
+    <div class="db-sub" id="db-sub">0 / 7 attributes drafted</div>
+    <div id="db-slots"></div>
+    <div class="db-overall">
+      <div class="db-ov-row">
+        <span class="db-ov-lbl">Avg Rating</span>
+        <span class="db-ov-val" id="db-ov-val">—</span>
+      </div>
+      <div class="db-ov-bar"><div class="db-ov-fill" id="db-ov-fill" style="width:0%"></div></div>
+    </div>
+    <button class="reset-btn" onclick="resetGame()">↺ Start Over</button>
+  </div>
+
+</div>
+
+<script>
+// ── STATIC DATA ─────────────────────────────────────────────────────────────
+const RAW = {"2000":{"Gustavo Kuerten":{"rank":1,"country":"BRA","overall":8.38,"serve":4.4,"return":2.66,"pressure":3.86,"forehand":3.05,"backhand":7.57,"volley":3.55},"Marat Safin":{"rank":2,"country":"RUS","overall":8.34,"serve":2.47,"return":2.16,"pressure":6.45,"forehand":3.13,"backhand":9.42,"volley":3.09},"Pete Sampras":{"rank":3,"country":"USA","overall":7.45,"serve":9.03,"return":0.54,"pressure":7.22,"forehand":9.27,"backhand":6.8,"volley":3.4},"Magnus Norman":{"rank":4,"country":"SWE","overall":7.22,"serve":2.9,"return":4.83,"pressure":4.36,"forehand":2.43,"backhand":3.47,"volley":4.13},"Yevgeny Kafelnikov":{"rank":5,"country":"RUS","overall":6.76,"serve":0.15,"return":5.56,"pressure":4.9,"forehand":1.74,"backhand":2.36,"volley":4.17},"Andre Agassi":{"rank":6,"country":"USA","overall":6.29,"serve":3.36,"return":5.64,"pressure":8.53,"forehand":7.95,"backhand":9.34,"volley":7.99},"Lleyton Hewitt":{"rank":7,"country":"AUS","overall":6.02,"serve":1.08,"return":6.99,"pressure":2.39,"forehand":4.52,"backhand":6.91,"volley":8.88},"Alex Corretja":{"rank":8,"country":"ESP","overall":5.48,"serve":0.69,"return":5.95,"pressure":7.07,"forehand":0.73,"backhand":4.25,"volley":10.0},"Thomas Enqvist":{"rank":9,"country":"SWE","overall":4.4,"serve":1.97,"return":2.97,"pressure":1.89,"forehand":6.37,"backhand":8.84,"volley":1.74},"Tim Henman":{"rank":10,"country":"GBR","overall":3.44,"serve":2.24,"return":3.82,"pressure":2.24,"forehand":2.7,"backhand":9.03,"volley":1.24}},"2001":{"Lleyton Hewitt":{"rank":1,"country":"AUS","overall":8.61,"serve":0.93,"return":8.46,"pressure":5.33,"forehand":9.15,"backhand":7.61,"volley":9.5},"Gustavo Kuerten":{"rank":2,"country":"BRA","overall":8.07,"serve":5.21,"return":3.2,"pressure":3.05,"forehand":7.64,"backhand":9.77,"volley":4.21},"Andre Agassi":{"rank":3,"country":"USA","overall":7.68,"serve":4.9,"return":6.72,"pressure":3.32,"forehand":9.0,"backhand":9.85,"volley":8.15},"Yevgeny Kafelnikov":{"rank":4,"country":"RUS","overall":7.1,"serve":0.31,"return":4.94,"pressure":5.14,"forehand":2.05,"backhand":0.58,"volley":0.93},"Juan Carlos Ferrero":{"rank":5,"country":"ESP","overall":6.99,"serve":1.47,"return":6.6,"pressure":2.39,"forehand":0.04,"backhand":9.27,"volley":0.31},"Sebastien Grosjean":{"rank":6,"country":"FRA","overall":6.37,"serve":0.58,"return":5.83,"pressure":3.51,"forehand":3.9,"backhand":2.01,"volley":1.78},"Patrick Rafter":{"rank":7,"country":"AUS","overall":6.33,"serve":7.41,"return":2.82,"pressure":4.17,"forehand":7.1,"backhand":5.21,"volley":1.2},"Tommy Haas":{"rank":8,"country":"GER","overall":4.79,"serve":2.08,"return":3.94,"pressure":4.59,"forehand":1.27,"backhand":4.71,"volley":1.58},"Tim Henman":{"rank":9,"country":"GBR","overall":3.94,"serve":1.85,"return":6.87,"pressure":1.2,"forehand":4.56,"backhand":6.1,"volley":2.01},"Pete Sampras":{"rank":10,"country":"USA","overall":2.97,"serve":6.02,"return":0.23,"pressure":5.33,"forehand":2.82,"backhand":6.99,"volley":0.46}},"2002":{"Lleyton Hewitt":{"rank":1,"country":"AUS","overall":8.8,"serve":0.39,"return":7.95,"pressure":9.38,"forehand":4.36,"backhand":5.75,"volley":2.97},"Andre Agassi":{"rank":2,"country":"USA","overall":7.49,"serve":5.56,"return":7.14,"pressure":2.97,"forehand":4.4,"backhand":4.05,"volley":8.8},"Marat Safin":{"rank":3,"country":"RUS","overall":6.56,"serve":2.7,"return":3.13,"pressure":2.74,"forehand":1.66,"backhand":4.52,"volley":1.66},"Juan Carlos Ferrero":{"rank":4,"country":"ESP","overall":6.18,"serve":0.69,"return":4.21,"pressure":4.79,"forehand":2.32,"backhand":7.68,"volley":6.25},"Carlos Moya":{"rank":5,"country":"ESP","overall":6.06,"serve":1.89,"return":2.86,"pressure":7.8,"forehand":1.0,"backhand":2.12,"volley":4.36},"Roger Federer":{"rank":6,"country":"SUI","overall":5.95,"serve":4.25,"return":4.17,"pressure":1.35,"forehand":6.53,"backhand":8.03,"volley":6.33},"Jiri Novak":{"rank":7,"country":"CZE","overall":4.94,"serve":1.93,"return":7.72,"pressure":1.74,"forehand":2.2,"backhand":1.58,"volley":3.36},"Tim Henman":{"rank":8,"country":"GBR","overall":4.44,"serve":1.12,"return":6.33,"pressure":1.43,"forehand":0.0,"backhand":3.09,"volley":0.23},"Albert Costa":{"rank":9,"country":"ESP","overall":3.86,"serve":1.31,"return":2.78,"pressure":2.28,"forehand":8.88,"backhand":0.31,"volley":9.69},"Andy Roddick":{"rank":10,"country":"USA","overall":3.59,"serve":7.61,"return":2.55,"pressure":6.91,"forehand":5.64,"backhand":1.12,"volley":0.0}},"2003":{"Andy Roddick":{"rank":1,"country":"USA","overall":8.84,"serve":9.58,"return":1.47,"pressure":8.3,"forehand":5.44,"backhand":5.98,"volley":0.97},"Roger Federer":{"rank":2,"country":"SUI","overall":8.65,"serve":6.37,"return":6.1,"pressure":5.98,"forehand":8.34,"backhand":5.68,"volley":5.87},"Juan Carlos Ferrero":{"rank":3,"country":"ESP","overall":8.46,"serve":2.78,"return":6.45,"pressure":7.1,"forehand":5.71,"backhand":8.22,"volley":9.88},"Andre Agassi":{"rank":4,"country":"USA","overall":7.53,"serve":4.98,"return":9.38,"pressure":6.87,"forehand":6.18,"backhand":5.91,"volley":7.45},"Guillermo Coria":{"rank":5,"country":"ARG","overall":7.37,"serve":2.93,"return":10.0,"pressure":6.56,"forehand":9.73,"backhand":9.88,"volley":8.03},"Rainer Schuettler":{"rank":6,"country":"GER","overall":7.26,"serve":0.35,"return":8.15,"pressure":7.8,"forehand":4.25,"backhand":2.9,"volley":3.17},"Carlos Moya":{"rank":7,"country":"ESP","overall":4.75,"serve":1.58,"return":5.52,"pressure":0.93,"forehand":0.31,"backhand":5.44,"volley":2.82},"David Nalbandian":{"rank":8,"country":"ARG","overall":3.71,"serve":0.04,"return":8.88,"pressure":0.77,"forehand":6.72,"backhand":9.19,"volley":0.42},"Mark Philippoussis":{"rank":9,"country":"AUS","overall":1.43,"serve":5.41,"return":0.85,"pressure":6.29,"forehand":3.4,"backhand":2.93,"volley":0.77},"Sebastien Grosjean":{"rank":10,"country":"FRA","overall":1.35,"serve":1.7,"return":2.43,"pressure":0.08,"forehand":9.88,"backhand":2.51,"volley":4.56}},"2004":{"Roger Federer":{"rank":1,"country":"SUI","overall":9.77,"serve":8.84,"return":6.49,"pressure":9.88,"forehand":8.26,"backhand":6.33,"volley":5.41},"Andy Roddick":{"rank":2,"country":"USA","overall":7.88,"serve":9.65,"return":2.08,"pressure":8.34,"forehand":3.67,"backhand":4.67,"volley":0.81},"Lleyton Hewitt":{"rank":3,"country":"AUS","overall":7.76,"serve":1.24,"return":7.49,"pressure":7.3,"forehand":5.6,"backhand":7.95,"volley":7.34},"Marat Safin":{"rank":4,"country":"RUS","overall":7.03,"serve":5.25,"return":1.24,"pressure":2.63,"forehand":0.85,"backhand":4.4,"volley":1.66},"Carlos Moya":{"rank":5,"country":"ESP","overall":5.6,"serve":3.59,"return":2.55,"pressure":7.68,"forehand":4.29,"backhand":1.0,"volley":1.0},"Tim Henman":{"rank":6,"country":"GBR","overall":5.41,"serve":2.55,"return":4.52,"pressure":0.66,"forehand":1.35,"backhand":0.08,"volley":0.04},"Guillermo Coria":{"rank":7,"country":"ARG","overall":5.25,"serve":0.89,"return":8.61,"pressure":9.19,"forehand":0.08,"backhand":4.59,"volley":0.35},"Andre Agassi":{"rank":8,"country":"USA","overall":3.94,"serve":6.64,"return":4.75,"pressure":1.58,"forehand":1.85,"backhand":7.92,"volley":9.11},"David Nalbandian":{"rank":9,"country":"ARG","overall":3.01,"serve":0.27,"return":8.3,"pressure":2.74,"forehand":4.44,"backhand":7.64,"volley":2.43},"Gaston Gaudio":{"rank":10,"country":"ARG","overall":2.9,"serve":0.08,"return":7.68,"pressure":0.23,"forehand":0.15,"backhand":0.35,"volley":1.47}},"2005":{"Roger Federer":{"rank":1,"country":"SUI","overall":9.85,"serve":8.42,"return":7.53,"pressure":9.5,"forehand":9.42,"backhand":8.65,"volley":4.29},"Rafael Nadal":{"rank":2,"country":"ESP","overall":9.0,"serve":5.64,"return":9.85,"pressure":7.76,"forehand":8.3,"backhand":7.8,"volley":2.12},"Andy Roddick":{"rank":3,"country":"USA","overall":7.07,"serve":9.92,"return":1.04,"pressure":6.49,"forehand":2.28,"backhand":0.81,"volley":0.5},"Lleyton Hewitt":{"rank":4,"country":"AUS","overall":5.52,"serve":3.86,"return":4.83,"pressure":9.46,"forehand":8.42,"backhand":7.72,"volley":6.56},"Nikolay Davydenko":{"rank":5,"country":"RUS","overall":5.21,"serve":1.12,"return":8.76,"pressure":1.51,"forehand":0.62,"backhand":1.47,"volley":0.15},"David Nalbandian":{"rank":6,"country":"ARG","overall":5.1,"serve":0.23,"return":9.15,"pressure":0.27,"forehand":4.02,"backhand":2.93,"volley":9.73},"Andre Agassi":{"rank":7,"country":"USA","overall":4.63,"serve":3.4,"return":5.25,"pressure":8.53,"forehand":7.88,"backhand":1.81,"volley":4.02},"Guillermo Coria":{"rank":8,"country":"ARG","overall":4.36,"serve":0.12,"return":9.69,"pressure":2.93,"forehand":1.47,"backhand":6.45,"volley":1.43},"Ivan Ljubicic":{"rank":9,"country":"CRO","overall":4.29,"serve":8.07,"return":0.42,"pressure":4.36,"forehand":0.97,"backhand":7.26,"volley":0.85},"Gaston Gaudio":{"rank":10,"country":"ARG","overall":3.63,"serve":0.19,"return":8.69,"pressure":5.02,"forehand":9.19,"backhand":9.81,"volley":7.07}},"2006":{"Roger Federer":{"rank":1,"country":"SUI","overall":10.0,"serve":8.61,"return":7.72,"pressure":9.85,"forehand":8.69,"backhand":8.76,"volley":7.53},"Rafael Nadal":{"rank":2,"country":"ESP","overall":8.73,"serve":7.1,"return":6.25,"pressure":8.49,"forehand":8.8,"backhand":7.07,"volley":7.57},"Nikolay Davydenko":{"rank":3,"country":"RUS","overall":6.45,"serve":2.7,"return":9.54,"pressure":1.43,"forehand":1.51,"backhand":3.75,"volley":7.72},"James Blake":{"rank":4,"country":"USA","overall":5.68,"serve":0.69,"return":6.33,"pressure":3.59,"forehand":2.63,"backhand":6.37,"volley":1.47},"Ivan Ljubicic":{"rank":5,"country":"CRO","overall":5.56,"serve":7.92,"return":1.04,"pressure":3.36,"forehand":1.04,"backhand":2.32,"volley":2.9},"Andy Roddick":{"rank":6,"country":"USA","overall":5.33,"serve":9.69,"return":2.16,"pressure":2.59,"forehand":2.51,"backhand":4.13,"volley":0.39},"Tommy Robredo":{"rank":7,"country":"ESP","overall":5.17,"serve":1.97,"return":7.18,"pressure":1.66,"forehand":1.78,"backhand":6.18,"volley":8.96},"David Nalbandian":{"rank":8,"country":"ARG","overall":4.83,"serve":0.42,"return":7.41,"pressure":0.39,"forehand":2.97,"backhand":8.88,"volley":4.44},"Mario Ancic":{"rank":9,"country":"CRO","overall":3.71,"serve":6.37,"return":2.24,"pressure":9.11,"forehand":0.23,"backhand":0.0,"volley":1.12},"Fernando Gonzalez":{"rank":10,"country":"CHI","overall":3.36,"serve":2.36,"return":2.43,"pressure":4.29,"forehand":8.65,"backhand":8.96,"volley":4.32}},"2007":{"Roger Federer":{"rank":1,"country":"SUI","overall":9.88,"serve":8.65,"return":5.75,"pressure":8.92,"forehand":6.02,"backhand":3.55,"volley":6.49},"Rafael Nadal":{"rank":2,"country":"ESP","overall":9.58,"serve":6.53,"return":8.57,"pressure":7.92,"forehand":8.84,"backhand":8.73,"volley":6.64},"Novak Djokovic":{"rank":3,"country":"SRB","overall":8.73,"serve":3.9,"return":5.83,"pressure":9.03,"forehand":2.36,"backhand":4.17,"volley":2.55},"Nikolay Davydenko":{"rank":4,"country":"RUS","overall":6.45,"serve":0.62,"return":7.8,"pressure":1.24,"forehand":0.66,"backhand":7.76,"volley":2.36},"David Ferrer":{"rank":5,"country":"ESP","overall":6.22,"serve":1.04,"return":9.81,"pressure":6.1,"forehand":1.12,"backhand":0.97,"volley":3.63},"Andy Roddick":{"rank":6,"country":"USA","overall":5.68,"serve":9.81,"return":0.27,"pressure":8.76,"forehand":3.28,"backhand":0.89,"volley":0.19},"Fernando Gonzalez":{"rank":7,"country":"CHI","overall":3.32,"serve":2.66,"return":2.86,"pressure":4.02,"forehand":9.96,"backhand":9.65,"volley":7.37},"Richard Gasquet":{"rank":8,"country":"FRA","overall":2.93,"serve":2.97,"return":6.18,"pressure":0.42,"forehand":9.85,"backhand":10.0,"volley":6.14},"David Nalbandian":{"rank":9,"country":"ARG","overall":2.16,"serve":0.54,"return":4.71,"pressure":2.16,"forehand":8.61,"backhand":3.28,"volley":8.15},"Tommy Robredo":{"rank":10,"country":"ESP","overall":2.08,"serve":2.05,"return":7.37,"pressure":2.12,"forehand":1.08,"backhand":0.42,"volley":3.78}},"2008":{"Rafael Nadal":{"rank":1,"country":"ESP","overall":9.81,"serve":8.15,"return":8.8,"pressure":9.69,"forehand":9.31,"backhand":3.44,"volley":9.31},"Roger Federer":{"rank":2,"country":"SUI","overall":9.31,"serve":9.0,"return":5.1,"pressure":2.7,"forehand":6.8,"backhand":5.29,"volley":3.98},"Novak Djokovic":{"rank":3,"country":"SRB","overall":9.27,"serve":7.37,"return":7.61,"pressure":5.87,"forehand":2.66,"backhand":3.17,"volley":2.66},"Andy Murray":{"rank":4,"country":"GBR","overall":7.95,"serve":1.47,"return":6.76,"pressure":9.58,"forehand":2.93,"backhand":6.29,"volley":7.14},"Nikolay Davydenko":{"rank":5,"country":"RUS","overall":6.14,"serve":2.86,"return":8.49,"pressure":1.27,"forehand":2.08,"backhand":2.86,"volley":7.26},"Jo-Wilfried Tsonga":{"rank":6,"country":"FRA","overall":3.63,"serve":6.99,"return":1.89,"pressure":8.15,"forehand":4.86,"backhand":4.83,"volley":4.86},"Gilles Simon":{"rank":7,"country":"FRA","overall":3.28,"serve":0.5,"return":3.05,"pressure":6.33,"forehand":0.73,"backhand":4.44,"volley":1.04},"Andy Roddick":{"rank":8,"country":"USA","overall":3.2,"serve":9.85,"return":0.42,"pressure":4.67,"forehand":0.89,"backhand":0.27,"volley":0.69},"Juan Martin Del Potro":{"rank":9,"country":"ARG","overall":3.01,"serve":2.63,"return":7.92,"pressure":9.77,"forehand":3.55,"backhand":3.59,"volley":0.66},"James Blake":{"rank":10,"country":"USA","overall":2.16,"serve":1.31,"return":3.94,"pressure":1.04,"forehand":1.89,"backhand":3.82,"volley":0.54}},"2009":{"Roger Federer":{"rank":1,"country":"SUI","overall":8.92,"serve":9.11,"return":3.47,"pressure":4.52,"forehand":6.87,"backhand":5.25,"volley":5.83},"Rafael Nadal":{"rank":2,"country":"ESP","overall":8.3,"serve":5.14,"return":9.15,"pressure":9.07,"forehand":7.07,"backhand":3.78,"volley":9.0},"Novak Djokovic":{"rank":3,"country":"SRB","overall":7.92,"serve":3.28,"return":7.34,"pressure":8.07,"forehand":4.75,"backhand":2.2,"volley":1.62},"Andy Murray":{"rank":4,"country":"GBR","overall":7.18,"serve":4.36,"return":9.07,"pressure":7.49,"forehand":7.22,"backhand":9.61,"volley":5.17},"Juan Martin Del Potro":{"rank":5,"country":"ARG","overall":6.83,"serve":4.48,"return":5.17,"pressure":8.46,"forehand":3.36,"backhand":3.32,"volley":5.25},"Nikolay Davydenko":{"rank":6,"country":"RUS","overall":4.25,"serve":3.94,"return":7.3,"pressure":6.95,"forehand":6.14,"backhand":3.82,"volley":8.84},"Andy Roddick":{"rank":7,"country":"USA","overall":3.13,"serve":9.96,"return":0.66,"pressure":4.52,"forehand":5.83,"backhand":6.22,"volley":0.62},"Robin Soderling":{"rank":8,"country":"SWE","overall":1.16,"serve":5.91,"return":4.56,"pressure":1.0,"forehand":2.16,"backhand":1.31,"volley":2.39},"Fernando Verdasco":{"rank":9,"country":"ESP","overall":0.89,"serve":5.48,"return":5.95,"pressure":0.58,"forehand":5.37,"backhand":6.56,"volley":3.05},"Jo-Wilfried Tsonga":{"rank":10,"country":"FRA","overall":0.35,"serve":8.65,"return":0.62,"pressure":4.63,"forehand":4.86,"backhand":4.83,"volley":4.86}},"2010":{"Rafael Nadal":{"rank":1,"country":"ESP","overall":9.5,"serve":8.76,"return":6.87,"pressure":8.61,"forehand":9.88,"backhand":8.49,"volley":9.85},"Roger Federer":{"rank":2,"country":"SUI","overall":8.22,"serve":8.46,"return":4.9,"pressure":7.26,"forehand":6.29,"backhand":1.58,"volley":4.05},"Novak Djokovic":{"rank":3,"country":"SRB","overall":6.25,"serve":1.74,"return":8.15,"pressure":4.09,"forehand":5.33,"backhand":2.24,"volley":2.28},"Andy Murray":{"rank":4,"country":"GBR","overall":5.75,"serve":2.78,"return":7.07,"pressure":0.46,"forehand":3.71,"backhand":8.3,"volley":3.32},"Robin Soderling":{"rank":5,"country":"SWE","overall":5.44,"serve":5.41,"return":4.29,"pressure":3.51,"forehand":2.9,"backhand":1.85,"volley":1.54},"Tomas Berdych":{"rank":6,"country":"CZE","overall":1.93,"serve":5.71,"return":3.86,"pressure":0.54,"forehand":3.32,"backhand":0.5,"volley":3.9},"David Ferrer":{"rank":7,"country":"ESP","overall":1.66,"serve":2.39,"return":7.57,"pressure":1.97,"forehand":0.39,"backhand":4.83,"volley":6.41},"Andy Roddick":{"rank":8,"country":"USA","overall":1.51,"serve":9.88,"return":0.15,"pressure":3.13,"forehand":0.58,"backhand":0.89,"volley":0.12},"Fernando Verdasco":{"rank":9,"country":"ESP","overall":0.81,"serve":1.24,"return":5.14,"pressure":5.21,"forehand":3.24,"backhand":0.19,"volley":0.27},"Mikhail Youzhny":{"rank":10,"country":"RUS","overall":0.42,"serve":1.43,"return":5.17,"pressure":4.32,"forehand":0.27,"backhand":2.28,"volley":4.09}},"2011":{"Novak Djokovic":{"rank":1,"country":"SRB","overall":9.69,"serve":6.14,"return":9.96,"pressure":8.73,"forehand":7.68,"backhand":6.49,"volley":6.25},"Rafael Nadal":{"rank":2,"country":"ESP","overall":8.49,"serve":5.1,"return":9.42,"pressure":7.03,"forehand":9.46,"backhand":5.37,"volley":9.54},"Roger Federer":{"rank":3,"country":"SUI","overall":7.8,"serve":8.88,"return":5.37,"pressure":3.59,"forehand":7.61,"backhand":2.82,"volley":7.49},"Andy Murray":{"rank":4,"country":"GBR","overall":7.3,"serve":1.62,"return":9.73,"pressure":9.0,"forehand":2.55,"backhand":7.88,"volley":5.37},"David Ferrer":{"rank":5,"country":"ESP","overall":4.21,"serve":2.43,"return":8.65,"pressure":3.59,"forehand":1.24,"backhand":1.54,"volley":7.64},"Jo-Wilfried Tsonga":{"rank":6,"country":"FRA","overall":2.86,"serve":7.18,"return":1.89,"pressure":5.25,"forehand":4.86,"backhand":4.83,"volley":4.86},"Tomas Berdych":{"rank":7,"country":"CZE","overall":1.54,"serve":3.55,"return":6.1,"pressure":5.68,"forehand":0.81,"backhand":0.12,"volley":3.59},"Mardy Fish":{"rank":8,"country":"USA","overall":0.46,"serve":4.25,"return":3.47,"pressure":0.93,"forehand":0.19,"backhand":5.87,"volley":1.16},"Janko Tipsarevic":{"rank":9,"country":"SRB","overall":0.15,"serve":3.01,"return":5.91,"pressure":0.5,"forehand":1.31,"backhand":7.84,"volley":2.63},"Nicolas Almagro":{"rank":10,"country":"ESP","overall":0.0,"serve":2.55,"return":1.81,"pressure":1.85,"forehand":1.51,"backhand":1.27,"volley":6.83}},"2012":{"Novak Djokovic":{"rank":1,"country":"SRB","overall":9.54,"serve":7.3,"return":9.46,"pressure":8.96,"forehand":5.87,"backhand":1.39,"volley":5.29},"Roger Federer":{"rank":2,"country":"SUI","overall":8.88,"serve":9.31,"return":4.25,"pressure":8.8,"forehand":7.34,"backhand":4.75,"volley":7.92},"Andy Murray":{"rank":3,"country":"GBR","overall":7.72,"serve":3.4,"return":7.18,"pressure":5.1,"forehand":4.83,"backhand":3.24,"volley":7.03},"Rafael Nadal":{"rank":4,"country":"ESP","overall":6.8,"serve":7.84,"return":9.92,"pressure":7.37,"forehand":8.49,"backhand":4.25,"volley":9.42},"David Ferrer":{"rank":5,"country":"ESP","overall":6.64,"serve":4.71,"return":7.95,"pressure":9.61,"forehand":2.47,"backhand":0.85,"volley":2.24},"Tomas Berdych":{"rank":6,"country":"CZE","overall":3.82,"serve":5.64,"return":4.09,"pressure":5.44,"forehand":5.98,"backhand":0.69,"volley":2.7},"Juan Martin Del Potro":{"rank":7,"country":"ARG","overall":3.24,"serve":7.49,"return":4.09,"pressure":7.72,"forehand":5.52,"backhand":1.47,"volley":8.42},"Jo-Wilfried Tsonga":{"rank":8,"country":"FRA","overall":1.24,"serve":5.95,"return":2.24,"pressure":2.16,"forehand":4.86,"backhand":4.83,"volley":4.86},"Janko Tipsarevic":{"rank":9,"country":"SRB","overall":0.5,"serve":3.24,"return":2.32,"pressure":3.94,"forehand":0.42,"backhand":1.35,"volley":2.47},"Richard Gasquet":{"rank":10,"country":"FRA","overall":0.04,"serve":4.4,"return":4.48,"pressure":2.08,"forehand":3.47,"backhand":9.46,"volley":0.08}},"2013":{"Rafael Nadal":{"rank":1,"country":"ESP","overall":9.61,"serve":7.72,"return":9.11,"pressure":9.92,"forehand":9.61,"backhand":8.38,"volley":6.02},"Novak Djokovic":{"rank":2,"country":"SRB","overall":9.42,"serve":8.53,"return":8.49,"pressure":8.0,"forehand":5.95,"backhand":7.41,"volley":8.57},"David Ferrer":{"rank":3,"country":"ESP","overall":5.83,"serve":0.69,"return":8.34,"pressure":4.44,"forehand":0.54,"backhand":1.16,"volley":6.45},"Andy Murray":{"rank":4,"country":"GBR","overall":5.79,"serve":4.09,"return":7.88,"pressure":9.73,"forehand":4.71,"backhand":5.44,"volley":5.33},"Juan Martin Del Potro":{"rank":5,"country":"ARG","overall":4.9,"serve":6.53,"return":3.09,"pressure":5.25,"forehand":9.54,"backhand":5.33,"volley":2.32},"Roger Federer":{"rank":6,"country":"SUI","overall":2.63,"serve":6.8,"return":4.05,"pressure":4.13,"forehand":4.48,"backhand":1.24,"volley":3.67},"Tomas Berdych":{"rank":7,"country":"CZE","overall":2.51,"serve":4.71,"return":4.4,"pressure":0.69,"forehand":3.98,"backhand":1.43,"volley":3.82},"Stan Wawrinka":{"rank":8,"country":"SUI","overall":1.62,"serve":3.59,"return":1.97,"pressure":3.05,"forehand":7.57,"backhand":6.14,"volley":3.24},"Richard Gasquet":{"rank":9,"country":"FRA","overall":0.89,"serve":3.13,"return":3.75,"pressure":2.28,"forehand":3.17,"backhand":6.72,"volley":3.44},"Jo-Wilfried Tsonga":{"rank":10,"country":"FRA","overall":0.62,"serve":7.3,"return":1.43,"pressure":5.6,"forehand":4.86,"backhand":4.83,"volley":4.86}},"2014":{"Novak Djokovic":{"rank":1,"country":"SRB","overall":9.07,"serve":7.99,"return":9.0,"pressure":8.84,"forehand":7.76,"backhand":6.64,"volley":5.71},"Roger Federer":{"rank":2,"country":"SUI","overall":8.57,"serve":9.19,"return":3.75,"pressure":7.37,"forehand":5.64,"backhand":2.74,"volley":6.91},"Rafael Nadal":{"rank":3,"country":"ESP","overall":6.91,"serve":6.53,"return":9.65,"pressure":6.37,"forehand":9.81,"backhand":3.51,"volley":9.61},"Stan Wawrinka":{"rank":4,"country":"SUI","overall":5.14,"serve":5.02,"return":2.39,"pressure":1.31,"forehand":8.03,"backhand":9.58,"volley":7.41},"Kei Nishikori":{"rank":5,"country":"JPN","overall":4.48,"serve":2.47,"return":4.98,"pressure":9.42,"forehand":3.09,"backhand":9.73,"volley":9.58},"Andy Murray":{"rank":6,"country":"GBR","overall":3.78,"serve":1.47,"return":8.07,"pressure":4.83,"forehand":4.59,"backhand":1.66,"volley":3.67},"Tomas Berdych":{"rank":7,"country":"CZE","overall":3.47,"serve":5.33,"return":3.67,"pressure":0.04,"forehand":8.15,"backhand":2.51,"volley":3.75},"Milos Raonic":{"rank":8,"country":"CAN","overall":3.17,"serve":9.77,"return":0.19,"pressure":7.57,"forehand":2.24,"backhand":0.54,"volley":1.81},"Marin Cilic":{"rank":9,"country":"CRO","overall":2.43,"serve":4.09,"return":1.58,"pressure":4.94,"forehand":1.43,"backhand":0.46,"volley":0.73},"David Ferrer":{"rank":10,"country":"ESP","overall":2.24,"serve":0.46,"return":8.38,"pressure":2.9,"forehand":2.12,"backhand":0.77,"volley":9.96}},"2015":{"Novak Djokovic":{"rank":1,"country":"SRB","overall":9.92,"serve":8.65,"return":9.03,"pressure":9.65,"forehand":6.33,"backhand":4.36,"volley":6.95},"Andy Murray":{"rank":2,"country":"GBR","overall":8.15,"serve":3.78,"return":8.03,"pressure":8.19,"forehand":4.17,"backhand":6.95,"volley":7.95},"Roger Federer":{"rank":3,"country":"SUI","overall":7.84,"serve":9.5,"return":4.67,"pressure":6.25,"forehand":6.56,"backhand":8.34,"volley":5.95},"Stan Wawrinka":{"rank":4,"country":"SUI","overall":6.95,"serve":4.71,"return":1.12,"pressure":6.06,"forehand":5.29,"backhand":7.03,"volley":6.99},"Rafael Nadal":{"rank":5,"country":"ESP","overall":4.86,"serve":4.48,"return":7.1,"pressure":2.66,"forehand":8.07,"backhand":7.53,"volley":9.77},"Tomas Berdych":{"rank":6,"country":"CZE","overall":3.55,"serve":4.21,"return":5.79,"pressure":7.53,"forehand":3.47,"backhand":3.98,"volley":8.69},"David Ferrer":{"rank":7,"country":"ESP","overall":2.82,"serve":0.85,"return":8.73,"pressure":8.26,"forehand":0.46,"backhand":0.15,"volley":5.64},"Kei Nishikori":{"rank":8,"country":"JPN","overall":2.66,"serve":3.51,"return":4.32,"pressure":2.47,"forehand":2.39,"backhand":8.8,"volley":9.38},"Richard Gasquet":{"rank":9,"country":"FRA","overall":0.27,"serve":6.1,"return":2.05,"pressure":5.02,"forehand":4.63,"backhand":9.96,"volley":1.39},"Jo-Wilfried Tsonga":{"rank":10,"country":"FRA","overall":0.23,"serve":8.15,"return":0.89,"pressure":2.51,"forehand":4.86,"backhand":4.83,"volley":4.86}},"2016":{"Andy Murray":{"rank":1,"country":"GBR","overall":9.46,"serve":4.48,"return":9.46,"pressure":9.34,"forehand":4.13,"backhand":8.53,"volley":9.46},"Novak Djokovic":{"rank":2,"country":"SRB","overall":9.19,"serve":5.52,"return":9.31,"pressure":9.81,"forehand":6.1,"backhand":6.06,"volley":6.8},"Milos Raonic":{"rank":3,"country":"CAN","overall":5.29,"serve":9.46,"return":0.54,"pressure":6.53,"forehand":4.09,"backhand":2.66,"volley":3.86},"Stan Wawrinka":{"rank":4,"country":"SUI","overall":5.06,"serve":4.83,"return":1.97,"pressure":3.47,"forehand":6.76,"backhand":9.5,"volley":2.78},"Kei Nishikori":{"rank":5,"country":"JPN","overall":4.17,"serve":2.24,"return":6.41,"pressure":8.22,"forehand":1.39,"backhand":6.41,"volley":6.02},"Marin Cilic":{"rank":6,"country":"CRO","overall":1.39,"serve":6.33,"return":1.27,"pressure":0.73,"forehand":1.93,"backhand":2.7,"volley":1.27},"Gael Monfils":{"rank":7,"country":"FRA","overall":1.31,"serve":4.83,"return":6.99,"pressure":1.16,"forehand":8.49,"backhand":8.42,"volley":3.28},"Dominic Thiem":{"rank":8,"country":"AUT","overall":1.2,"serve":3.09,"return":2.43,"pressure":7.64,"forehand":7.72,"backhand":9.31,"volley":3.47},"Rafael Nadal":{"rank":9,"country":"ESP","overall":0.89,"serve":3.05,"return":9.88,"pressure":1.81,"forehand":9.23,"backhand":6.8,"volley":7.61},"Tomas Berdych":{"rank":10,"country":"CZE","overall":0.58,"serve":3.4,"return":1.58,"pressure":5.75,"forehand":3.2,"backhand":2.93,"volley":1.27}},"2017":{"Rafael Nadal":{"rank":1,"country":"ESP","overall":8.96,"serve":8.76,"return":8.11,"pressure":7.18,"forehand":9.69,"backhand":9.0,"volley":9.81},"Roger Federer":{"rank":2,"country":"SUI","overall":8.53,"serve":9.61,"return":4.56,"pressure":9.19,"forehand":8.96,"backhand":7.3,"volley":7.88},"Grigor Dimitrov":{"rank":3,"country":"BUL","overall":4.67,"serve":6.06,"return":2.55,"pressure":3.9,"forehand":8.92,"backhand":4.25,"volley":8.3},"Alexander Zverev":{"rank":4,"country":"GER","overall":3.51,"serve":5.17,"return":3.59,"pressure":5.71,"forehand":1.62,"backhand":8.46,"volley":1.93},"Dominic Thiem":{"rank":5,"country":"AUT","overall":2.12,"serve":2.24,"return":3.32,"pressure":0.12,"forehand":7.18,"backhand":5.37,"volley":5.68},"Marin Cilic":{"rank":6,"country":"CRO","overall":1.81,"serve":6.22,"return":2.66,"pressure":0.35,"forehand":3.94,"backhand":1.7,"volley":3.51},"David Goffin":{"rank":7,"country":"BEL","overall":1.78,"serve":1.2,"return":4.79,"pressure":7.14,"forehand":2.01,"backhand":9.07,"volley":2.59},"Jack Sock":{"rank":8,"country":"USA","overall":0.77,"serve":1.66,"return":0.77,"pressure":5.17,"forehand":7.84,"backhand":7.41,"volley":6.18},"Stan Wawrinka":{"rank":9,"country":"SUI","overall":0.69,"serve":3.59,"return":1.78,"pressure":8.42,"forehand":6.45,"backhand":3.13,"volley":0.89},"Roberto Bautista-Agut":{"rank":10,"country":"ESP","overall":0.19,"serve":0.93,"return":4.98,"pressure":5.52,"forehand":4.86,"backhand":4.83,"volley":4.86}},"2018":{"Novak Djokovic":{"rank":1,"country":"SRB","overall":8.19,"serve":7.49,"return":6.83,"pressure":3.75,"forehand":9.03,"backhand":4.02,"volley":6.37},"Rafael Nadal":{"rank":2,"country":"ESP","overall":7.34,"serve":6.22,"return":9.61,"pressure":8.65,"forehand":9.58,"backhand":8.07,"volley":9.03},"Roger Federer":{"rank":3,"country":"SUI","overall":6.53,"serve":9.38,"return":3.2,"pressure":6.99,"forehand":6.41,"backhand":4.05,"volley":7.68},"Alexander Zverev":{"rank":4,"country":"GER","overall":6.41,"serve":4.09,"return":5.48,"pressure":4.05,"forehand":0.93,"backhand":4.59,"volley":2.2},"Juan Martin Del Potro":{"rank":5,"country":"ARG","overall":4.98,"serve":7.99,"return":3.63,"pressure":5.95,"forehand":9.5,"backhand":6.53,"volley":5.21},"Kevin Anderson":{"rank":6,"country":"RSA","overall":3.9,"serve":9.73,"return":0.04,"pressure":6.41,"forehand":6.6,"backhand":1.89,"volley":0.58},"Marin Cilic":{"rank":7,"country":"CRO","overall":2.74,"serve":6.95,"return":1.39,"pressure":0.62,"forehand":7.45,"backhand":3.2,"volley":8.65},"Dominic Thiem":{"rank":8,"country":"AUT","overall":2.39,"serve":3.28,"return":3.36,"pressure":4.86,"forehand":7.92,"backhand":8.11,"volley":7.1},"Kei Nishikori":{"rank":9,"country":"JPN","overall":1.27,"serve":1.74,"return":3.86,"pressure":8.84,"forehand":0.12,"backhand":8.69,"volley":8.92},"John Isner":{"rank":10,"country":"USA","overall":0.73,"serve":10.0,"return":0.0,"pressure":0.85,"forehand":3.78,"backhand":2.51,"volley":4.67}},"2019":{"Rafael Nadal":{"rank":1,"country":"ESP","overall":8.69,"serve":8.49,"return":9.23,"pressure":8.38,"forehand":9.38,"backhand":9.38,"volley":9.23},"Novak Djokovic":{"rank":2,"country":"SRB","overall":8.22,"serve":7.88,"return":8.96,"pressure":6.02,"forehand":7.3,"backhand":7.41,"volley":7.18},"Roger Federer":{"rank":3,"country":"SUI","overall":6.72,"serve":9.42,"return":3.94,"pressure":7.95,"forehand":8.22,"backhand":4.21,"volley":7.84},"Dominic Thiem":{"rank":4,"country":"AUT","overall":5.91,"serve":5.06,"return":3.01,"pressure":7.34,"forehand":8.73,"backhand":6.68,"volley":5.6},"Daniil Medvedev":{"rank":5,"country":"RUS","overall":5.64,"serve":4.59,"return":6.22,"pressure":2.55,"forehand":3.44,"backhand":5.64,"volley":1.08},"Stefanos Tsitsipas":{"rank":6,"country":"GRE","overall":4.98,"serve":5.95,"return":0.69,"pressure":3.78,"forehand":3.82,"backhand":3.36,"volley":4.75},"Alexander Zverev":{"rank":7,"country":"GER","overall":1.0,"serve":1.81,"return":3.44,"pressure":1.35,"forehand":4.02,"backhand":8.15,"volley":1.27},"Matteo Berrettini":{"rank":8,"country":"ITA","overall":0.31,"serve":7.45,"return":0.35,"pressure":3.13,"forehand":7.41,"backhand":4.83,"volley":5.91},"Roberto Bautista-Agut":{"rank":9,"country":"ESP","overall":0.12,"serve":4.05,"return":1.66,"pressure":0.19,"forehand":4.86,"backhand":4.83,"volley":4.86},"Gael Monfils":{"rank":10,"country":"FRA","overall":0.08,"serve":2.16,"return":4.36,"pressure":3.2,"forehand":4.21,"backhand":6.25,"volley":4.71}},"2020":{"Novak Djokovic":{"rank":1,"country":"SRB","overall":9.96,"serve":5.33,"return":8.92,"pressure":10.0,"forehand":6.83,"backhand":5.56,"volley":4.56},"Rafael Nadal":{"rank":2,"country":"ESP","overall":9.73,"serve":7.18,"return":9.77,"pressure":8.03,"forehand":10.0,"backhand":9.92,"volley":9.15},"Dominic Thiem":{"rank":3,"country":"AUT","overall":9.65,"serve":3.71,"return":4.63,"pressure":4.25,"forehand":6.95,"backhand":6.76,"volley":9.92},"Daniil Medvedev":{"rank":4,"country":"RUS","overall":9.38,"serve":6.8,"return":6.06,"pressure":4.75,"forehand":1.97,"backhand":6.6,"volley":4.56},"Roger Federer":{"rank":5,"country":"SUI","overall":8.42,"serve":7.68,"return":3.4,"pressure":9.96,"forehand":2.78,"backhand":7.1,"volley":6.6},"Stefanos Tsitsipas":{"rank":6,"country":"GRE","overall":7.99,"serve":8.34,"return":1.66,"pressure":0.15,"forehand":7.53,"backhand":1.2,"volley":9.19},"Alexander Zverev":{"rank":7,"country":"GER","overall":7.64,"serve":3.94,"return":5.41,"pressure":3.24,"forehand":1.16,"backhand":2.16,"volley":2.05},"Andrey Rublev":{"rank":8,"country":"RUS","overall":5.98,"serve":6.64,"return":6.6,"pressure":3.59,"forehand":8.46,"backhand":6.87,"volley":2.08},"Diego Schwartzman":{"rank":9,"country":"ARG","overall":4.32,"serve":0.0,"return":9.58,"pressure":6.64,"forehand":0.69,"backhand":1.97,"volley":8.76},"Matteo Berrettini":{"rank":10,"country":"ITA","overall":3.09,"serve":9.27,"return":0.12,"pressure":0.0,"forehand":6.99,"backhand":0.04,"volley":8.49}},"2021":{"Novak Djokovic":{"rank":1,"country":"SRB","overall":9.15,"serve":7.64,"return":9.27,"pressure":5.64,"forehand":6.06,"backhand":3.94,"volley":8.11},"Daniil Medvedev":{"rank":2,"country":"RUS","overall":8.03,"serve":6.87,"return":8.26,"pressure":4.44,"forehand":3.75,"backhand":7.14,"volley":7.22},"Alexander Zverev":{"rank":3,"country":"GER","overall":7.57,"serve":7.95,"return":5.29,"pressure":3.78,"forehand":5.91,"backhand":8.61,"volley":5.56},"Stefanos Tsitsipas":{"rank":4,"country":"GRE","overall":6.68,"serve":7.72,"return":4.44,"pressure":2.36,"forehand":5.56,"backhand":3.05,"volley":8.46},"Andrey Rublev":{"rank":5,"country":"RUS","overall":4.67,"serve":4.67,"return":5.44,"pressure":2.01,"forehand":9.11,"backhand":4.48,"volley":5.75},"Rafael Nadal":{"rank":6,"country":"ESP","overall":4.13,"serve":3.2,"return":9.34,"pressure":4.21,"forehand":9.34,"backhand":2.39,"volley":9.65},"Matteo Berrettini":{"rank":7,"country":"ITA","overall":3.4,"serve":9.03,"return":1.16,"pressure":9.31,"forehand":5.17,"backhand":0.66,"volley":4.79},"Casper Ruud":{"rank":8,"country":"NOR","overall":2.47,"serve":5.56,"return":5.71,"pressure":8.11,"forehand":6.64,"backhand":1.89,"volley":6.68},"Hubert Hurkacz":{"rank":9,"country":"POL","overall":1.58,"serve":7.07,"return":0.73,"pressure":0.81,"forehand":1.2,"backhand":1.08,"volley":2.86},"Jannik Sinner":{"rank":10,"country":"ITA","overall":1.04,"serve":1.39,"return":5.33,"pressure":4.67,"forehand":5.48,"backhand":2.43,"volley":8.38}},"2022":{"Carlos Alcaraz":{"rank":1,"country":"ESP","overall":6.87,"serve":4.25,"return":6.6,"pressure":5.79,"forehand":6.91,"backhand":3.71,"volley":8.07},"Rafael Nadal":{"rank":2,"country":"ESP","overall":6.1,"serve":3.82,"return":7.61,"pressure":7.45,"forehand":7.49,"backhand":9.69,"volley":8.73},"Casper Ruud":{"rank":3,"country":"NOR","overall":5.87,"serve":6.14,"return":1.54,"pressure":5.48,"forehand":7.8,"backhand":2.78,"volley":5.79},"Stefanos Tsitsipas":{"rank":4,"country":"GRE","overall":5.37,"serve":7.18,"return":1.85,"pressure":6.72,"forehand":7.26,"backhand":0.39,"volley":6.72},"Novak Djokovic":{"rank":5,"country":"SRB","overall":4.05,"serve":8.07,"return":7.18,"pressure":7.8,"forehand":9.77,"backhand":7.34,"volley":8.22},"Felix Auger Aliassime":{"rank":6,"country":"CAN","overall":2.59,"serve":6.99,"return":1.2,"pressure":2.86,"forehand":4.67,"backhand":1.74,"volley":7.3},"Daniil Medvedev":{"rank":7,"country":"RUS","overall":2.28,"serve":5.83,"return":5.56,"pressure":0.31,"forehand":3.59,"backhand":9.15,"volley":2.74},"Andrey Rublev":{"rank":8,"country":"RUS","overall":1.89,"serve":4.9,"return":2.74,"pressure":6.6,"forehand":7.14,"backhand":2.05,"volley":3.13},"Taylor Fritz":{"rank":9,"country":"USA","overall":1.12,"serve":5.83,"return":2.86,"pressure":1.89,"forehand":6.25,"backhand":5.44,"volley":1.97},"Hubert Hurkacz":{"rank":10,"country":"POL","overall":0.39,"serve":9.34,"return":0.42,"pressure":1.7,"forehand":1.81,"backhand":1.78,"volley":5.98}},"2023":{"Novak Djokovic":{"rank":1,"country":"SRB","overall":9.03,"serve":8.3,"return":6.95,"pressure":9.54,"forehand":8.19,"backhand":5.79,"volley":8.34},"Carlos Alcaraz":{"rank":2,"country":"ESP","overall":8.11,"serve":5.25,"return":6.8,"pressure":6.76,"forehand":7.99,"backhand":5.83,"volley":8.61},"Daniil Medvedev":{"rank":3,"country":"RUS","overall":7.41,"serve":3.17,"return":7.84,"pressure":5.79,"forehand":5.25,"backhand":7.18,"volley":4.48},"Jannik Sinner":{"rank":4,"country":"ITA","overall":6.6,"serve":5.75,"return":6.02,"pressure":6.68,"forehand":3.01,"backhand":2.47,"volley":9.07},"Andrey Rublev":{"rank":5,"country":"RUS","overall":4.02,"serve":3.71,"return":3.17,"pressure":1.08,"forehand":8.57,"backhand":4.56,"volley":5.44},"Stefanos Tsitsipas":{"rank":6,"country":"GRE","overall":2.66,"serve":8.26,"return":0.81,"pressure":2.74,"forehand":6.68,"backhand":0.62,"volley":6.1},"Alexander Zverev":{"rank":7,"country":"GER","overall":2.01,"serve":5.79,"return":1.74,"pressure":3.94,"forehand":0.5,"backhand":5.71,"volley":1.85},"Holger Rune":{"rank":8,"country":"DEN","overall":1.47,"serve":2.12,"return":1.27,"pressure":2.97,"forehand":5.41,"backhand":3.67,"volley":2.93},"Hubert Hurkacz":{"rank":9,"country":"POL","overall":0.85,"serve":8.92,"return":0.08,"pressure":1.78,"forehand":1.7,"backhand":1.04,"volley":4.25},"Taylor Fritz":{"rank":10,"country":"USA","overall":0.66,"serve":7.14,"return":3.2,"pressure":2.05,"forehand":4.79,"backhand":3.63,"volley":3.94}},"2024":{"Jannik Sinner":{"rank":1,"country":"ITA","overall":9.23,"serve":8.96,"return":6.56,"pressure":9.27,"forehand":8.11,"backhand":8.26,"volley":9.27},"Alexander Zverev":{"rank":2,"country":"GER","overall":7.61,"serve":9.54,"return":1.47,"pressure":3.24,"forehand":3.86,"backhand":9.54,"volley":4.4},"Carlos Alcaraz":{"rank":3,"country":"ESP","overall":7.14,"serve":6.22,"return":7.45,"pressure":6.14,"forehand":9.07,"backhand":3.82,"volley":7.8},"Taylor Fritz":{"rank":4,"country":"USA","overall":4.56,"serve":8.34,"return":0.93,"pressure":4.94,"forehand":4.32,"backhand":3.4,"volley":3.01},"Daniil Medvedev":{"rank":5,"country":"RUS","overall":4.52,"serve":0.93,"return":5.68,"pressure":6.8,"forehand":1.58,"backhand":5.6,"volley":3.2},"Casper Ruud":{"rank":6,"country":"NOR","overall":2.78,"serve":4.59,"return":2.36,"pressure":6.14,"forehand":9.65,"backhand":7.22,"volley":6.87},"Novak Djokovic":{"rank":7,"country":"SRB","overall":1.85,"serve":6.37,"return":6.25,"pressure":5.33,"forehand":5.21,"backhand":9.23,"volley":6.76},"Andrey Rublev":{"rank":8,"country":"RUS","overall":1.74,"serve":6.37,"return":0.97,"pressure":1.12,"forehand":8.76,"backhand":6.02,"volley":6.22},"Alex De Minaur":{"rank":9,"country":"AUS","overall":1.7,"serve":0.62,"return":8.38,"pressure":3.4,"forehand":2.74,"backhand":2.63,"volley":8.26},"Grigor Dimitrov":{"rank":10,"country":"BUL","overall":1.04,"serve":6.64,"return":1.35,"pressure":5.87,"forehand":5.75,"backhand":8.19,"volley":8.53}},"2025":{"Carlos Alcaraz":{"rank":1,"country":"ESP","overall":9.34,"serve":6.87,"return":8.22,"pressure":8.69,"forehand":7.37,"backhand":5.95,"volley":4.52},"Jannik Sinner":{"rank":2,"country":"ITA","overall":9.11,"serve":9.19,"return":8.84,"pressure":9.15,"forehand":8.38,"backhand":7.99,"volley":9.34},"Alexander Zverev":{"rank":3,"country":"GER","overall":4.59,"serve":8.22,"return":2.08,"pressure":1.54,"forehand":0.35,"backhand":4.79,"volley":1.89},"Novak Djokovic":{"rank":4,"country":"SRB","overall":4.05,"serve":8.57,"return":4.98,"pressure":6.14,"forehand":6.18,"backhand":7.37,"volley":5.48},"Felix Auger Aliassime":{"rank":5,"country":"CAN","overall":2.55,"serve":7.8,"return":0.31,"pressure":7.61,"forehand":2.59,"backhand":0.73,"volley":4.83},"Taylor Fritz":{"rank":6,"country":"USA","overall":2.36,"serve":9.15,"return":1.0,"pressure":3.44,"forehand":7.03,"backhand":9.11,"volley":6.53},"Alex De Minaur":{"rank":7,"country":"AUS","overall":2.32,"serve":2.2,"return":6.49,"pressure":1.58,"forehand":2.86,"backhand":2.08,"volley":5.52},"Lorenzo Musetti":{"rank":8,"country":"ITA","overall":2.05,"serve":3.94,"return":3.55,"pressure":0.89,"forehand":5.75,"backhand":8.57,"volley":7.76},"Ben Shelton":{"rank":9,"country":"USA","overall":1.97,"serve":7.57,"return":0.39,"pressure":5.52,"forehand":3.63,"backhand":0.23,"volley":2.16},"Jack Draper":{"rank":10,"country":"GBR","overall":0.5,"serve":6.76,"return":3.71,"pressure":6.83,"forehand":6.49,"backhand":8.92,"volley":2.51}}};
+
+const ATTRS = [
+  {key:'overall',  label:'Overall',  icon:'👑'},
+  {key:'serve',    label:'Serve',    icon:'⚡'},
+  {key:'return',   label:'Return',   icon:'🔄'},
+  {key:'pressure', label:'Pressure', icon:'🔥'},
+  {key:'forehand', label:'Forehand', icon:'🎾'},
+  {key:'backhand', label:'Backhand', icon:'↩️'},
+  {key:'volley',   label:'Volley',   icon:'🥅'},
+];
+
+const YEARS = Object.keys(RAW).sort();
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  spinning: false,
+  currentYear: null,
+  currentPlayer: null,
+  drafted: {},   // {key: {player,year,score,label,icon}}
+};
+
+// ── REEL SETUP ───────────────────────────────────────────────────────────────
+const ITEM_H = 72;
+
+function buildYearReel() {
+  const reel = document.getElementById('reel-year');
+  // Triple for seamless looping feel
+  const items = [...YEARS,...YEARS,...YEARS];
+  reel.innerHTML = items.map(y=>`
+    <div class="slot-item">
+      <div class="slot-item-inner year-item">${y}</div>
+    </div>`).join('');
+  // start in middle section
+  reel.style.transform = `translateY(-${YEARS.length * ITEM_H}px)`;
+}
+
+function buildPlayerReel(year) {
+  const players = Object.entries(RAW[year]).sort((a,b)=>a[1].rank-b[1].rank);
+  const reel = document.getElementById('reel-player');
+  const items = [...players,...players,...players];
+  reel.innerHTML = items.map(([name,d])=>`
+    <div class="slot-item">
+      <div class="slot-item-inner">
+        <div class="player-item">${name}</div>
+        <div class="player-item-sub">${d.country} · #${d.rank}</div>
+      </div>
+    </div>`).join('');
+  reel.style.transform = `translateY(-${players.length * ITEM_H}px)`;
+}
+
+buildYearReel();
+buildPlayerReel(YEARS[0]);
+
+// ── SPIN ─────────────────────────────────────────────────────────────────────
+function doSpin() {
+  if (state.spinning) return;
+  if (Object.keys(state.drafted).length === 7) {
+    setStatus('All 7 attributes drafted! Start over to play again.', true);
+    return;
+  }
+
+  state.spinning = true;
+  document.getElementById('spin-btn').disabled = true;
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('attr-section').style.display = 'none';
+  setStatus('Spinning...');
+
+  // Pick targets
+  const targetYearIdx = Math.floor(Math.random() * YEARS.length);
+  const targetYear = YEARS[targetYearIdx];
+  const players = Object.entries(RAW[targetYear]).sort((a,b)=>a[1].rank-b[1].rank);
+  const targetPlayerIdx = Math.floor(Math.random() * players.length);
+  const [targetPlayerName, targetPlayerData] = players[targetPlayerIdx];
+
+  // Build player reel for chosen year
+  buildPlayerReel(targetYear);
+
+  // Animate both reels
+  spinReel('reel-year', YEARS.length, targetYearIdx, 4 + Math.random()*3, () => {});
+  spinReel('reel-player', players.length, targetPlayerIdx, 5 + Math.random()*4, () => {
+    // Both done (player reel finishes last)
+    state.spinning = false;
+    state.currentYear = targetYear;
+    state.currentPlayer = targetPlayerName;
+    showResult(targetPlayerName, targetYear, targetPlayerData);
+    document.getElementById('spin-btn').disabled = false;
+  });
+}
+
+function spinReel(reelId, totalItems, targetIdx, extraSpins, onDone) {
+  const reel = document.getElementById(reelId);
+
+  // Start from middle section (offset = totalItems * ITEM_H)
+  const startOffset = totalItems * ITEM_H;
+  // Land on target in middle section
+  const landOffset = totalItems * ITEM_H + targetIdx * ITEM_H;
+  // Add extra full spins
+  const totalScroll = extraSpins * totalItems * ITEM_H + (landOffset - startOffset);
+  const endOffset = startOffset + totalScroll;
+
+  const duration = 2200 + Math.random() * 800;
+  const startTime = performance.now();
+
+  // Reset to start
+  reel.style.transition = 'none';
+  reel.style.transform = `translateY(-${startOffset}px)`;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      function easeOut(t) {
+        return 1 - Math.pow(1 - t, 3.5);
+      }
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const offset = startOffset + (endOffset - startOffset) * easeOut(t);
+        reel.style.transition = 'none';
+        reel.style.transform = `translateY(-${offset}px)`;
+
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          reel.style.transform = `translateY(-${landOffset}px)`;
+          onDone();
+        }
+      }
+      requestAnimationFrame(step);
+    });
+  });
+}
+
+// ── RESULT ───────────────────────────────────────────────────────────────────
+function showResult(name, year, data) {
+  document.getElementById('rp-name').textContent = name;
+  document.getElementById('rp-year').textContent = year;
+  document.getElementById('rp-meta').textContent = `${data.country} · ${year} ATP Year-End`;
+  document.getElementById('rp-rank').textContent = `#${data.rank}`;
+  document.getElementById('result-panel').classList.add('show');
+
+  renderAttrCards(data);
+  document.getElementById('attr-section').style.display = 'block';
+
+  const remaining = 7 - Object.keys(state.drafted).length;
+  setStatus(`Pick an attribute from ${name} (${year}) · ${remaining} left to draft`, true);
+}
+
+function scoreClass(v) {
+  if (v < 3.5) return 'score-low';
+  if (v < 6.5) return 'score-mid';
+  return 'score-high';
+}
+
+function renderAttrCards(data) {
+  const grid = document.getElementById('attr-grid');
+  grid.innerHTML = '';
+  ATTRS.forEach(a => {
+    const score = data[a.key];
+    const isDrafted = !!state.drafted[a.key];
+    const pct = (score / 10) * 100;
+    const sc = scoreClass(score);
+    const card = document.createElement('div');
+    card.className = `attr-card ${sc}${isDrafted ? ' drafted' : ''}`;
+    card.innerHTML = `
+      <div class="ac-name">${a.icon} ${a.label}</div>
+      <div class="ac-score">${score.toFixed(1)}<sup>/10</sup></div>
+      <div class="ac-bar"><div class="ac-fill" style="width:${pct}%"></div></div>`;
+    if (!isDrafted) card.onclick = () => draftAttr(a, score);
+    grid.appendChild(card);
+  });
+}
+
+// ── DRAFT ────────────────────────────────────────────────────────────────────
+function draftAttr(attr, score) {
+  state.drafted[attr.key] = {
+    player: state.currentPlayer,
+    year: state.currentYear,
+    score,
+    label: attr.label,
+    icon: attr.icon,
+  };
+  renderDraftBoard();
+  // Re-render cards so drafted one goes grey
+  const data = RAW[state.currentYear][state.currentPlayer];
+  renderAttrCards(data);
+
+  const remaining = 7 - Object.keys(state.drafted).length;
+  if (remaining === 0) {
+    setStatus('🏆 Player complete! Your GOAT is assembled.', true);
+    document.getElementById('complete-banner').classList.add('show');
+    document.getElementById('spin-btn').disabled = true;
+  } else {
+    setStatus(`${attr.label} drafted! ${remaining} attribute${remaining!==1?'s':''} remaining — spin again.`, true);
+  }
+}
+
+// ── DRAFT BOARD ──────────────────────────────────────────────────────────────
+function renderDraftBoard() {
+  const container = document.getElementById('db-slots');
+  container.innerHTML = '';
+  let total = 0, count = 0;
+
+  ATTRS.forEach(a => {
+    const d = state.drafted[a.key];
+    const slot = document.createElement('div');
+    slot.className = 'db-slot';
+    if (d) {
+      total += d.score; count++;
+      slot.innerHTML = `
+        <div class="db-icon filled">${a.icon}</div>
+        <div class="db-info">
+          <div class="db-attr-name">${a.label}</div>
+          <div class="db-player">${d.player} '${String(d.year).slice(-2)}</div>
+        </div>
+        <div class="db-score">${d.score.toFixed(1)}</div>`;
+    } else {
+      slot.innerHTML = `
+        <div class="db-icon">${a.icon}</div>
+        <div class="db-info">
+          <div class="db-attr-name">${a.label}</div>
+          <div class="db-empty">Not drafted</div>
+        </div>
+        <div class="db-score empty">—</div>`;
+    }
+    container.appendChild(slot);
+  });
+
+  document.getElementById('db-sub').textContent = `${count} / 7 attributes drafted`;
+
+  if (count > 0) {
+    const avg = (total / count).toFixed(2);
+    document.getElementById('db-ov-val').textContent = avg;
+    document.getElementById('db-ov-fill').style.width = `${(avg/10)*100}%`;
+  } else {
+    document.getElementById('db-ov-val').textContent = '—';
+    document.getElementById('db-ov-fill').style.width = '0%';
+  }
+}
+
+// ── RESET ────────────────────────────────────────────────────────────────────
+function resetGame() {
+  state = {spinning:false, currentYear:null, currentPlayer:null, drafted:{}};
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('attr-section').style.display = 'none';
+  document.getElementById('complete-banner').classList.remove('show');
+  document.getElementById('spin-btn').disabled = false;
+  document.getElementById('db-ov-val').textContent = '—';
+  document.getElementById('db-ov-fill').style.width = '0%';
+  buildYearReel();
+  buildPlayerReel(YEARS[0]);
+  setStatus('Spin to draw a player');
+  renderDraftBoard();
+}
+
+function setStatus(msg, hi=false) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status' + (hi ? ' hi' : '');
+}
+
+renderDraftBoard();
+</script>
+</body>
+</html>
