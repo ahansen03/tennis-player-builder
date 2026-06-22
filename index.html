@@ -54,15 +54,12 @@ body{
 /* ── SLOT MACHINE ── */
 .slots-area{display:flex;flex-direction:column;align-items:center;gap:16px}
 
-.slot-machine{
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-  background:var(--navy-card);
-  border:1px solid var(--border);
-  border-top:3px solid var(--gold);
-  padding:20px 24px 24px;
-  width:100%;
+.slot-reel {
+  display: flex;
+  flex-direction: column;
+  /* Use native GPU-accelerated transition with a premium custom cubic-bezier slot ease-out */
+  transition: transform 2.8s cubic-bezier(0.15, 0.85, 0.35, 1);
+  will-change: transform;
 }
 
 .slot-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
@@ -442,7 +439,7 @@ function buildYearReel() {
     <div class="slot-item">
       <div class="slot-item-inner year-item">${y}</div>
     </div>`).join('');
-  reel.style.transform = `translateY(-${YEARS.length * ITEM_H}px)`;
+  reel.style.transform = `translate3d(0, -${YEARS.length * ITEM_H}px, 0)`;
 }
 
 function buildPlayerReel(year) {
@@ -457,10 +454,10 @@ function buildPlayerReel(year) {
         <div class="player-item-sub">${d.country} · #${d.rank}</div>
       </div>
     </div>`).join('');
-  reel.style.transform = `translateY(-${players.length * ITEM_H}px)`;
+  reel.style.transform = `translate3d(0, -${players.length * ITEM_H}px, 0)`;
 }
 
-// ── SPIN ENGINE ──────────────────────────────────────────────────────────────
+// ── HIGH-PERFORMANCE SPIN ENGINE ─────────────────────────────────────────────
 function doSpin() {
   if (state.spinning) return;
   if (YEARS.length === 0) return;
@@ -475,16 +472,23 @@ function doSpin() {
   document.getElementById('attr-section').style.display = 'none';
   setStatus('Spinning...');
 
+  // 1. Pick randomized targets
   const targetYearIdx = Math.floor(Math.random() * YEARS.length);
   const targetYear = YEARS[targetYearIdx];
+  
   const players = Object.entries(RAW[targetYear]).sort((a,b)=>a[1].rank-b[1].rank);
   const targetPlayerIdx = Math.floor(Math.random() * players.length);
   const [targetPlayerName, targetPlayerData] = players[targetPlayerIdx];
 
+  // 2. Refresh player reel structural layout for the current year context
   buildPlayerReel(targetYear);
 
-  spinReel('reel-year', YEARS.length, targetYearIdx, 4 + Math.random()*3, () => {});
-  spinReel('reel-player', players.length, targetPlayerIdx, 5 + Math.random()*4, () => {
+  // 3. Fire native CSS hardware-accelerated animations
+  // Extra multipliers ensure the reel makes several full loops before settling
+  spinReelCSS('reel-year', YEARS.length, targetYearIdx, 3);
+  
+  // The player reel runs slightly longer to create a organic, sequential stop
+  spinReelCSS('reel-player', players.length, targetPlayerIdx, 4, () => {
     state.spinning = false;
     state.currentYear = targetYear;
     state.currentPlayer = targetPlayerName;
@@ -493,37 +497,43 @@ function doSpin() {
   });
 }
 
-function spinReel(reelId, totalItems, targetIdx, extraSpins, onDone) {
+function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
   const reel = document.getElementById(reelId);
+  if (!reel) return;
+
+  // Clear any existing active event listeners to prevent overlaps
+  const newReel = reel.cloneNode(true);
+  reel.parentNode.replaceChild(newReel, reel);
+
   const startOffset = totalItems * ITEM_H;
-  const landOffset = totalItems * ITEM_H + targetIdx * ITEM_H;
-  const totalScroll = extraSpins * totalItems * ITEM_H + (landOffset - startOffset);
-  const endOffset = startOffset + totalScroll;
-  const duration = 2200 + Math.random() * 800;
-  const startTime = performance.now();
+  const landOffset = startOffset + (targetIdx * ITEM_H);
+  const finalScrollDistance = (loops * totalItems * ITEM_H) + landOffset;
 
-  reel.style.transition = 'none';
-  reel.style.transform = `translateY(-${startOffset}px)`;
+  // Snaps instantly back to base baseline view without animation overhead
+  newReel.style.transition = 'none';
+  newReel.style.transform = `translate3d(0, -${startOffset}px, 0)`;
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      function easeOut(t) { return 1 - Math.pow(1 - t, 3.5); }
-      function step(now) {
-        const elapsed = now - startTime;
-        const t = Math.min(elapsed / duration, 1);
-        const offset = startOffset + (endOffset - startOffset) * easeOut(t);
-        reel.style.transform = `translateY(-${offset}px)`;
+  // Force a minor DOM reflow trigger so the browser registers the reset position before transitioning
+  newReel.offsetHeight;
 
-        if (t < 1) {
-          requestAnimationFrame(step);
-        } else {
-          reel.style.transform = `translateY(-${landOffset}px)`;
-          onDone();
-        }
+  // Execute smooth hardware transition down to the target index spot
+  newReel.style.transition = 'transform 2.8s cubic-bezier(0.15, 0.85, 0.35, 1)';
+  newReel.style.transform = `translate3d(0, -${finalScrollDistance}px, 0)`;
+
+  // Listen for the native transition engine to end
+  if (onDone) {
+    newReel.addEventListener('transitionend', function handleEnd(e) {
+      if (e.propertyName === 'transform') {
+        newReel.removeEventListener('transitionend', handleEnd);
+        
+        // Quietly reset layout structural position to single-loop index without visual jumps
+        newReel.style.transition = 'none';
+        newReel.style.transform = `translate3d(0, -${startOffset + (targetIdx * ITEM_H)}px, 0)`;
+        
+        onDone();
       }
-      requestAnimationFrame(step);
     });
-  });
+  }
 }
 
 // ── RESULTS & CARD RENDERING ─────────────────────────────────────────────────
