@@ -1047,15 +1047,16 @@ function simulateSeason() {
       // Grand Slams - 7 rounds
       let currentRound = 1;
       let wonTournament = true;
-
+      
       for (let r = 1; r <= 7; r++) {
-        if (Math.random() < prob) {
+        // Use exponential probability per round
+        if (Math.random() < Math.pow(prob, r)) {
           currentRound++;
         } else {
           wonTournament = false;
           break;
         }
-      }
+}
 
       if (wonTournament) {
         outcome = "Champion";
@@ -1082,7 +1083,7 @@ function simulateSeason() {
       let wonTournament = true;
 
       for (let r = 1; r <= 6; r++) {
-        if (Math.random() < prob) {
+        if (Math.random() < Math.pow(prob, r)) {
           currentRound++;
         } else {
           wonTournament = false;
@@ -1119,9 +1120,9 @@ function simulateSeason() {
         outcome = "Group Stage";
         score = "—";
       } else {
-        if (Math.random() < prob) {
+        if (Math.random() < Math.pow(prob, 2)) {
           pointsEarned += 400; 
-          if (Math.random() < prob) {
+          if (Math.random() < Math.pow(prob, 3)) {
             pointsEarned += 500; 
             outcome = "Champion";
             opponent = getOpponentByRankRange(1, 10);
