@@ -717,7 +717,7 @@ async function loadSimulationAssets() {
     }).catch(e => console.error("Error loading current_top_players.csv", e));
 
   // Load Best of Three Scores
-  fetch('./tennis_best_of_three_all_scores')
+  fetch('./tennis_best_of_three_all_scores.csv')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, skipEmptyLines: true }).data.forEach(r => {
@@ -727,7 +727,7 @@ async function loadSimulationAssets() {
     }).catch(e => console.error("Error loading tennis_best_of_three_all_scores.csv", e));
 
   // Load Best of Five Scores
-  fetch('./best_of_five_all_scores')
+  fetch('./best_of_five_all_scores.csv')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, skipEmptyLines: true }).data.forEach(r => {
@@ -989,11 +989,11 @@ function simulateSeason() {
   // Create sections for Majors and Masters
   outputGrid.innerHTML = `
     <div style="grid-column: 1 / -1; margin-bottom: 24px;">
-      <h3 style="font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); margin-bottom:12px; letter-spacing:1px; text-transform:uppercase;">🏆 Grand Slams & Finals</h3>
+      <h3 style="font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); margin-bottom:12px; letter-spacing:1px; text-transform:uppercase;">Grand Slams & Tour Finals</h3>
       <div id="majors-subgrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;"></div>
     </div>
     <div style="grid-column: 1 / -1; margin-bottom: 20px;">
-      <h3 style="font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--clay-light); margin-bottom:12px; letter-spacing:1px; text-transform:uppercase;">🎾 ATP Masters 1000</h3>
+      <h3 style="font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--clay-light); margin-bottom:12px; letter-spacing:1px; text-transform:uppercase;">Masters 1000 Events</h3>
       <div id="masters-subgrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;"></div>
     </div>
   `;
@@ -1022,18 +1022,18 @@ function simulateSeason() {
       }
 
       if (wonTournament) {
-        outcome = "Champion 🏆";
+        outcome = "Champion";
         pointsEarned = 2000;
         opponent = getOpponentByRankRange(1, 10);
         score = getRandomScore(true, true);
       } else {
-        if (currentRound === 1) { outcome = "Lost in R128"; pointsEarned = 10; opponent = getOpponentByRankRange(50, 100); }
-        else if (currentRound === 2) { outcome = "Lost in R64"; pointsEarned = 50; opponent = getOpponentByRankRange(51, 100); }
-        else if (currentRound === 3) { outcome = "Lost in R32"; pointsEarned = 100; opponent = getOpponentByRankRange(1, 50); }
-        else if (currentRound === 4) { outcome = "Lost in R16"; pointsEarned = 200; opponent = getOpponentByRankRange(1, 50); }
-        else if (currentRound === 5) { outcome = "Lost in QF"; pointsEarned = 400; opponent = getOpponentByRankRange(1, 10); }
-        else if (currentRound === 6) { outcome = "Lost in SF"; pointsEarned = 800; opponent = getOpponentByRankRange(1, 10); }
-        else if (currentRound === 7) { outcome = "Runner-Up 🥈"; pointsEarned = 1300; opponent = getOpponentByRankRange(1, 10); }
+        if (currentRound === 1) { outcome = "Round of 128"; pointsEarned = 10; opponent = getOpponentByRankRange(50, 100); }
+        else if (currentRound === 2) { outcome = "Round of 64"; pointsEarned = 50; opponent = getOpponentByRankRange(51, 100); }
+        else if (currentRound === 3) { outcome = "Round of 32"; pointsEarned = 100; opponent = getOpponentByRankRange(1, 50); }
+        else if (currentRound === 4) { outcome = "Round of 16"; pointsEarned = 200; opponent = getOpponentByRankRange(1, 50); }
+        else if (currentRound === 5) { outcome = "Quarterfinals"; pointsEarned = 400; opponent = getOpponentByRankRange(1, 10); }
+        else if (currentRound === 6) { outcome = "Semifinals"; pointsEarned = 800; opponent = getOpponentByRankRange(1, 10); }
+        else if (currentRound === 7) { outcome = "Runner-Up"; pointsEarned = 1300; opponent = getOpponentByRankRange(1, 10); }
         score = getRandomScore(false, true);
       }
     } 
@@ -1052,17 +1052,17 @@ function simulateSeason() {
       }
 
       if (wonTournament) {
-        outcome = "Champion 🏆";
+        outcome = "Champion";
         pointsEarned = 1000;
         opponent = getOpponentByRankRange(1, 10);
         score = getRandomScore(true, false);
       } else {
-        if (currentRound === 1) { outcome = "Lost in R64"; pointsEarned = 10; opponent = getOpponentByRankRange(51, 100); }
-        else if (currentRound === 2) { outcome = "Lost in R32"; pointsEarned = 45; opponent = getOpponentByRankRange(51, 100); }
-        else if (currentRound === 3) { outcome = "Lost in R16"; pointsEarned = 90; opponent = getOpponentByRankRange(1, 50); }
-        else if (currentRound === 4) { outcome = "Lost in QF"; pointsEarned = 180; opponent = getOpponentByRankRange(1, 50); }
-        else if (currentRound === 5) { outcome = "Lost in SF"; pointsEarned = 360; opponent = getOpponentByRankRange(1, 10); }
-        else if (currentRound === 6) { outcome = "Runner-Up 🥈"; pointsEarned = 600; opponent = getOpponentByRankRange(1, 10); }
+        if (currentRound === 1) { outcome = "Round of 64"; pointsEarned = 10; opponent = getOpponentByRankRange(51, 100); }
+        else if (currentRound === 2) { outcome = "Round of 32"; pointsEarned = 45; opponent = getOpponentByRankRange(51, 100); }
+        else if (currentRound === 3) { outcome = "Round of 16"; pointsEarned = 90; opponent = getOpponentByRankRange(1, 50); }
+        else if (currentRound === 4) { outcome = "Quarterfinals"; pointsEarned = 180; opponent = getOpponentByRankRange(1, 50); }
+        else if (currentRound === 5) { outcome = "Semifinals"; pointsEarned = 360; opponent = getOpponentByRankRange(1, 10); }
+        else if (currentRound === 6) { outcome = "Runner-Up"; pointsEarned = 600; opponent = getOpponentByRankRange(1, 10); }
         score = getRandomScore(false, false);
       }
     } 
@@ -1074,23 +1074,23 @@ function simulateSeason() {
       pointsEarned += roundRobinWins * 200;
 
       if (roundRobinWins < 2) {
-        outcome = "Lost in Group Stage";
+        outcome = "Group Stage";
         score = "—";
       } else {
         if (Math.random() < prob) {
           pointsEarned += 400; 
           if (Math.random() < prob) {
             pointsEarned += 500; 
-            outcome = "Champion 🏆";
+            outcome = "Champion";
             opponent = getOpponentByRankRange(1, 10);
             score = getRandomScore(true, false);
           } else {
-            outcome = "Runner-Up 🥈";
+            outcome = "Runner-Up";
             opponent = getOpponentByRankRange(1, 10);
             score = getRandomScore(false, false);
           }
         } else {
-          outcome = "Lost in Semifinals";
+          outcome = "Semifinals";
           opponent = getOpponentByRankRange(1, 10);
           score = getRandomScore(false, false);
         }
