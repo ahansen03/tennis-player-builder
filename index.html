@@ -437,8 +437,42 @@ body{
 .sim-card {
   background: var(--navy-mid);
   border: 1px solid var(--border);
-  padding: 10px 14px;
+  padding: 14px 18px;
   border-radius: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.sim-card-left {
+  display: flex;
+  flex-direction: column;
+}
+.sim-card-badge {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 2px;
+  color: var(--chalk);
+  flex-shrink: 0;
+}
+.sim-card-badge.win {
+  background: var(--green);
+  border: 1px solid var(--green-bright);
+}
+.sim-card-badge.loss {
+  background: var(--red);
+  border: 1px solid #ff6b6b;
+}
+#majors-subgrid, #masters-subgrid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0px !important;
 }
 .sim-card-name {
   font-family: 'DM Mono', monospace;
@@ -560,7 +594,7 @@ body{
 
     <!-- ── SIMULATE SEASON RESULTS DISPLAY ── -->
     <div class="sim-results-area" id="sim-results-area">
-      <div class="sim-header" id="sim-results-header">Season Simulation Results (Majors and Masters)</div>
+      <div class="sim-header" id="sim-results-header">Season Simulation Results</div>
       <div class="sim-grid" id="sim-grid"></div>
       <div class="sim-summary">
         <div>
@@ -575,7 +609,7 @@ body{
   <div class="draft-board">
     <div class="complete-banner" id="complete-banner">
       <h3>🏆 Build Complete!</h3>
-      <p>Your ultimate player is assembled.</p>
+      <p>Welcome to the Tour, <span id="welcome-player-name"></span>.</p>
     </div>
     <div class="db-title" id="db-player-title">Your Player</div>
     <div class="db-sub" id="db-sub">0 / 8 attributes drafted</div>
@@ -727,14 +761,14 @@ async function loadSimulationAssets() {
     }).catch(e => console.error("Error loading tennis_best_of_three_all_scores.csv", e));
 
   // Load Best of Five Scores
-  fetch('./best_of_five_all_scores.csv')
+  fetch('./tennis_best_of_five_all_scores.csv')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, skipEmptyLines: true }).data.forEach(r => {
         if(r.result === 'W') SCORES_BO5.W.push(r.score);
         if(r.result === 'L') SCORES_BO5.L.push(r.score);
       });
-    }).catch(e => console.error("Error loading best_of_five_all_scores.csv", e));
+    }).catch(e => console.error("Error loading tennis_best_of_five_all_scores.csv", e));
 }
 
 function initGame() {
@@ -872,7 +906,7 @@ function renderAttrCards(data) {
     const isLockedOut = isThisCardDrafted || state.hasDraftedThisSpin; 
     const pct = (score / 10) * 100;
     
-    const displayScore = (state.hardMode) ? "???" : score.toFixed(1);
+    const displayScore = (state.hardMode) ? "?" : score.toFixed(1);
     const sc = (state.hardMode) ? "score-hidden" : scoreClass(score);
     
     const card = document.createElement('div');
@@ -907,8 +941,9 @@ function draftAttr(attr, score) {
 
   const remaining = 8 - Object.keys(state.drafted).length;
   if (remaining === 0) {
-    setStatus('🏆 Player complete! Ready to simulate season.', true);
+    setStatus('Let\'s begin our journey!', true);
     document.getElementById('complete-banner').classList.add('show');
+    document.getElementById('welcome-player-name').textContent = state.playerName;
     document.getElementById('spin-btn').disabled = true;
     document.getElementById('sim-btn').classList.add('show');
   } else {
@@ -1099,13 +1134,36 @@ function simulateSeason() {
 
     totalTournamentPoints += pointsEarned;
 
+    // Determine clean presentation for round name if we lost
+    let roundLabel = outcome; 
+    if (outcome.includes("Lost in ")) roundLabel = outcome.replace("Lost in ", "");
+    
+    // Check if player won the tournament
+    const isWin = outcome.includes("Champion");
+    const badgeHTML = isWin ? '<div class="sim-card-badge win">W</div>' : '<div class="sim-card-badge loss">L</div>';
+    
+    // Construct text string using your player's configured profile name
+    let detailText = "";
+    if (isWin) {
+      detailText = `F: ${state.playerName} def. ${opponent ? opponent.name : 'Opponent'}: ${score}`;
+    } else {
+      if (event.type === "TF" && outcome === "Lost in Group Stage") {
+        detailText = `Group Stage Exit | Score: ${score}`;
+      } else {
+        detailText = `${roundLabel}: ${opponent ? opponent.name : 'Opponent'} def. ${state.playerName}: ${score}`;
+      }
+    }
+
     const card = document.createElement('div');
     card.className = 'sim-card';
     card.innerHTML = `
-      <div class="sim-card-name">${event.name}</div>
-      <div class="sim-card-result">${outcome}</div>
-      <div class="sim-card-score" style="margin-top: 4px;">${opponent ? `vs. ${opponent.name} (#${opponent.rank})` : ''}</div>
-      <div class="sim-card-score" style="color: var(--gold); font-size: 11px; margin-top: 2px;">Score: ${score}</div>
+      <div class="sim-card-left">
+        <div class="sim-card-name" style="letter-spacing: 1px;">${event.name}</div>
+        <div class="sim-card-score" style="color: var(--chalk-dim); font-size: 12px; margin-top: 4px; font-family: sans-serif;">
+          ${detailText}
+        </div>
+      </div>
+      ${badgeHTML}
     `;
 
     // Append to the correct category section
