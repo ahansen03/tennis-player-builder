@@ -508,7 +508,7 @@ function startGameSession() {
 async function loadTennisData() {
   try {
     // Load Core Historical Attributes Database
-    const response = await fetch('./final_data.csv');
+    const response = await fetch('./final_data');
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const csvText = await response.text();
     
@@ -533,13 +533,13 @@ async function loadTennisData() {
     });
 
     // Async Fetch Supporting Simulation Datasets from Github Pipelines
-    fetch('./current_top_players.csv').then(res => res.text()).then(txt => {
+    fetch('./current_top_players').then(res => res.text()).then(txt => {
       TOP_PLAYERS = Papa.parse(txt, { header: true, dynamicTyping: true, skipEmptyLines: true }).data;
     });
-    fetch('./tennis_best_of_three_all_scores.csv').then(res => res.text()).then(txt => {
+    fetch('./tennis_best_of_three_all_scores').then(res => res.text()).then(txt => {
       SCORES_BO3 = Papa.parse(txt, { header: true, skipEmptyLines: true }).data;
     });
-    fetch('./tennis_best_of_five_all_scores.csv').then(res => res.text()).then(txt => {
+    fetch('./tennis_best_of_five_all_scores').then(res => res.text()).then(txt => {
       SCORES_BO5 = Papa.parse(txt, { header: true, skipEmptyLines: true }).data;
     });
     
