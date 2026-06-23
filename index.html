@@ -742,7 +742,7 @@ async function loadTennisData() {
 
 async function loadSimulationAssets() {
   // Load current top players
-  fetch('./current_top_players.csv')
+  fetch('./current_top_players')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, dynamicTyping: true, skipEmptyLines: true }).data.forEach(r => {
