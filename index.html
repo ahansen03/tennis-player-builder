@@ -1188,17 +1188,17 @@ function simulateSeason() {
   const finalTotalPoints = Math.round(totalTournamentPoints + (prob * 3000));
   
   // Calculate Year-End Ranking bracket mapping
-  let finalRank = "Outside Top 100";
-  if (finalTotalPoints >= 9000) finalRank = "#1";
-  else if (finalTotalPoints >= 7200) finalRank = "#2";
-  else if (finalTotalPoints >= 5800) finalRank = "#3";
-  else if (finalTotalPoints >= 4800) finalRank = "#4";
-  else if (finalTotalPoints >= 4000) finalRank = "#5";
-  else if (finalTotalPoints >= 3000) finalRank = `#${Math.floor(6 + Math.random() * 5)}`;
-  else if (finalTotalPoints >= 1800) finalRank = `#${Math.floor(11 + Math.random() * 10)}`;
-  else if (finalTotalPoints >= 1100) finalRank = `#${Math.floor(21 + Math.random() * 30)}`;
-  else if (finalTotalPoints >= 700) finalRank = `#${Math.floor(51 + Math.random() * 25)}`;
-  else if (finalTotalPoints >= 500) finalRank = `#${Math.floor(76 + Math.random() * 25)}`;
+  // Continuous model calculation from Screenshot 2026-06-23 at 2.59.46 PM.png
+  const maxPossiblePoints = 21500; 
+  const percentPts = finalTotalPoints / maxPossiblePoints;
+  
+  // ln(rank) = 4.41982 - 9.17830 * percent_pts -> rank = e^(4.41982 - 9.17830 * percent_pts)
+  let calculatedRank = Math.round(Math.exp(4.41982 - (9.17830 * percentPts)));
+  
+  // Boundary safety constraints
+  if (calculatedRank < 1) calculatedRank = 1;
+  
+  let finalRank = calculatedRank > 100 ? "Outside Top 100" : `#${calculatedRank}`;
 
   // Display results summary window
   document.getElementById('sim-summary-points').textContent = `Final Season Points: ${finalTotalPoints.toLocaleString()}`;
