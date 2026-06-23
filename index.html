@@ -843,7 +843,7 @@ function doSpin() {
     }
 
     showResult(targetPlayerName, targetYear, targetPlayerData);
-    document.getElementById('spin-btn').disabled = false;
+    //document.getElementById('spin-btn').disabled = false; #doesn't spin again until user chooses
   });
 }
 
@@ -948,6 +948,7 @@ function draftAttr(attr, score) {
     document.getElementById('sim-btn').classList.add('show');
   } else {
     setStatus(`${attr.label} drafted! Spin again to unlock your next selection.`, true);
+    document.getElementById('spin-btn').disabled = false;
   }
 }
 
