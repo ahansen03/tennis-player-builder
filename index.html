@@ -1049,14 +1049,16 @@ function simulateSeason() {
       let wonTournament = true;
       
       for (let r = 1; r <= 7; r++) {
-        // Use exponential probability per round
-        if (Math.random() < Math.pow(prob, r)) {
+        // Shift exponents down by 1 level starting from round 2 (r=1 -> power 1, r=2 -> power 1, r=3 -> power 2...)
+        const exponent = Math.max(1, r - 1);
+        
+        if (Math.random() < Math.pow(prob, exponent)) {
           currentRound++;
         } else {
           wonTournament = false;
           break;
         }
-}
+      }
 
       if (wonTournament) {
         outcome = "Champion";
@@ -1069,21 +1071,24 @@ function simulateSeason() {
         else if (currentRound === 4) { outcome = "Round of 16"; pointsEarned = 200; opponent = getOpponentByRankRange(16, 30); }
         else if (currentRound === 5) { outcome = "Quarterfinals"; pointsEarned = 400; opponent = getOpponentByRankRange(9, 15); }
         else if (currentRound === 6) { outcome = "Semifinals"; pointsEarned = 800; opponent = getOpponentByRankRange(2, 8); }
-        else if (currentRound === 7) { outcome = "Runner-Up"; pointsEarned = 1300; opponent = getOpponentByRankRange(1, 8); }
+        else if (currentRound === 7) { outcome = "Runner-Up"; pointsEarned = 1300; opponent = getOpponentByRankRange(1, 4); }
       }
       
       // Pull directly from the simplified flat arrays (always a winning layout perspective)
       score = SCORES_BO5.length > 0 
         ? SCORES_BO5[Math.floor(Math.random() * SCORES_BO5.length)] 
         : "6-4 6-3 6-2";
-    } 
+    }
     else if (event.type === "M1000") {
       // Masters 1000 - 6 rounds
       let currentRound = 1;
       let wonTournament = true;
 
       for (let r = 1; r <= 6; r++) {
-        if (Math.random() < Math.pow(prob, r)) {
+        // Shift exponents down by 1 level starting from round 2 (r=1 -> power 1, r=2 -> power 1, r=3 -> power 2...)
+        const exponent = Math.max(1, r - 1);
+
+        if (Math.random() < Math.pow(prob, exponent)) {
           currentRound++;
         } else {
           wonTournament = false;
@@ -1101,14 +1106,14 @@ function simulateSeason() {
         else if (currentRound === 3) { outcome = "Round of 16"; pointsEarned = 90; opponent = getOpponentByRankRange(31, 45); }
         else if (currentRound === 4) { outcome = "Quarterfinals"; pointsEarned = 180; opponent = getOpponentByRankRange(9, 30); }
         else if (currentRound === 5) { outcome = "Semifinals"; pointsEarned = 360; opponent = getOpponentByRankRange(2, 8); }
-        else if (currentRound === 6) { outcome = "Runner-Up"; pointsEarned = 600; opponent = getOpponentByRankRange(1, 8); }
+        else if (currentRound === 6) { outcome = "Runner-Up"; pointsEarned = 600; opponent = getOpponentByRankRange(1, 4); }
       }
       
       // Pull directly from the simplified flat arrays (always a winning layout perspective)
       score = SCORES_BO3.length > 0 
         ? SCORES_BO3[Math.floor(Math.random() * SCORES_BO3.length)] 
         : "6-4 6-3";
-    } 
+    }
     else if (event.type === "TF") {
       let roundRobinWins = 0;
       for (let i = 0; i < 3; i++) {
@@ -1120,19 +1125,19 @@ function simulateSeason() {
         outcome = "Group Stage";
         score = "—";
       } else {
-        if (Math.random() < Math.pow(prob, 3)) {
+        if (Math.random() < Math.pow(prob, 4)) {
           pointsEarned += 400; 
-          if (Math.random() < Math.pow(prob, 4)) {
+          if (Math.random() < Math.pow(prob, 5)) {
             pointsEarned += 500; 
             outcome = "Champion";
-            opponent = getOpponentByRankRange(1, 8);
+            opponent = getOpponentByRankRange(1, 4);
           } else {
             outcome = "Runner-Up";
-            opponent = getOpponentByRankRange(1, 8);
+            opponent = getOpponentByRankRange(1, 4);
           }
         } else {
           outcome = "Semifinals";
-          opponent = getOpponentByRankRange(1, 8);
+          opponent = getOpponentByRankRange(1, 6);
         }
         
         // Pull directly from the simplified flat arrays (always a winning layout perspective)
