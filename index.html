@@ -1103,7 +1103,7 @@ function simulateSeason() {
     card.className = 'sim-card';
     card.innerHTML = `
       <div class="sim-card-name">${event.name}</div>
-      <div class="sim-card-result">${outcome} (+${pointsEarned} pts)</div>
+      <div class="sim-card-result">${outcome}</div>
       <div class="sim-card-score" style="margin-top: 4px;">${opponent ? `vs. ${opponent.name} (#${opponent.rank})` : ''}</div>
       <div class="sim-card-score" style="color: var(--gold); font-size: 11px; margin-top: 2px;">Score: ${score}</div>
     `;
