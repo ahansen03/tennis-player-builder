@@ -1120,19 +1120,19 @@ function simulateSeason() {
         outcome = "Group Stage";
         score = "—";
       } else {
-        if (Math.random() < Math.pow(prob, 2)) {
+        if (Math.random() < Math.pow(prob, 3)) {
           pointsEarned += 400; 
-          if (Math.random() < Math.pow(prob, 3)) {
+          if (Math.random() < Math.pow(prob, 4)) {
             pointsEarned += 500; 
             outcome = "Champion";
-            opponent = getOpponentByRankRange(1, 10);
+            opponent = getOpponentByRankRange(1, 8);
           } else {
             outcome = "Runner-Up";
-            opponent = getOpponentByRankRange(1, 10);
+            opponent = getOpponentByRankRange(1, 8);
           }
         } else {
           outcome = "Semifinals";
-          opponent = getOpponentByRankRange(1, 10);
+          opponent = getOpponentByRankRange(1, 8);
         }
         
         // Pull directly from the simplified flat arrays (always a winning layout perspective)
@@ -1185,7 +1185,7 @@ function simulateSeason() {
   });
 
   // Calculate bonus points equation 
-  const finalTotalPoints = Math.round(totalTournamentPoints + (prob * 3000));
+  const finalTotalPoints = Math.round(totalTournamentPoints + (prob * 2500));
   
   // Calculate Year-End Ranking bracket mapping
   // Continuous model calculation from Screenshot 2026-06-23 at 2.59.46 PM.png
