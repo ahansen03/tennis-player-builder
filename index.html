@@ -751,7 +751,7 @@ async function loadSimulationAssets() {
     }).catch(e => console.error("Error loading current_top_players.csv", e));
 
   // Load Best of Three Scores (No headers, read index 0)
-  fetch('./tennis_best_of_three_all_scores.csv')
+  fetch('./tennis_best_of_three_all_scores')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: false, skipEmptyLines: true }).data.forEach(r => {
@@ -761,7 +761,7 @@ async function loadSimulationAssets() {
     }).catch(e => console.error("Error loading tennis_best_of_three_all_scores.csv", e));
 
   // Load Best of Five Scores (No headers, read index 0)
-  fetch('./tennis_best_of_five_all_scores.csv')
+  fetch('./tennis_best_of_five_all_scores')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: false, skipEmptyLines: true }).data.forEach(r => {
