@@ -33,6 +33,139 @@ body{
   overflow-x:hidden;
 }
 
+/* ── GAME SETUP MODAL OVERLAY ── */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(6, 14, 28, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.modal-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.modal-card {
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  max-width: 440px;
+  width: 100%;
+  padding: 32px 28px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+.modal-card h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 1.5px;
+  color: var(--chalk);
+  margin-bottom: 6px;
+}
+.modal-card p {
+  font-size: 13px;
+  color: var(--chalk-dim);
+  margin-bottom: 24px;
+}
+.form-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+.form-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--clay);
+  display: block;
+  margin-bottom: 8px;
+}
+.form-input {
+  width: 100%;
+  background: var(--navy-mid);
+  border: 1px solid var(--navy-light);
+  color: var(--chalk);
+  padding: 12px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus {
+  border-color: var(--gold);
+}
+.toggle-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--navy-mid);
+  padding: 12px 14px;
+  border: 1px solid var(--navy-light);
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.toggle-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--chalk);
+}
+.toggle-desc {
+  font-size: 11px;
+  color: var(--chalk-dim);
+  margin-top: 2px;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--navy-light);
+  transition: .2s;
+  border-radius: 2px;
+}
+.slider:before {
+  position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+  background-color: var(--chalk-dim);
+  transition: .2s;
+  border-radius: 1px;
+}
+.switch input:checked + .slider { background-color: var(--green); }
+.switch input:checked + .slider:before {
+  transform: translateX(18px);
+  background-color: var(--chalk);
+}
+.start-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 12px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 12px;
+  transition: background 0.15s, transform 0.1s;
+  clip-path: polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+}
+.start-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
+
 /* ── HEADER ── */
 .hdr{text-align:center;padding:22px 16px 0}
 .hdr-eye{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--clay);margin-bottom:5px}
@@ -57,7 +190,6 @@ body{
 .slot-reel {
   display: flex;
   flex-direction: column;
-  /* Use native GPU-accelerated transition with a premium custom cubic-bezier slot ease-out */
   transition: transform 2.8s cubic-bezier(0.15, 0.85, 0.35, 1);
   will-change: transform;
 }
@@ -80,11 +212,6 @@ body{
 .slot-window::before{top:0;height:20px;background:linear-gradient(to bottom,#060e1c,transparent)}
 .slot-window::after{bottom:0;height:20px;background:linear-gradient(to top,#060e1c,transparent)}
 
-.slot-reel{
-  display:flex;
-  flex-direction:column;
-  transition:transform 0s;
-}
 .slot-item{
   height:72px;
   display:flex;
@@ -197,6 +324,7 @@ body{
 .score-low .ac-fill{background:linear-gradient(90deg,#7a2020,#c45050)}
 .score-mid .ac-fill{background:linear-gradient(90deg,#6b5010,var(--clay))}
 .score-high .ac-fill{background:linear-gradient(90deg,var(--green),var(--gold))}
+.score-hidden .ac-fill{background:linear-gradient(90deg,#4a5568,#718096)}
 
 /* ── STATUS ── */
 .status{
@@ -270,6 +398,34 @@ body{
 </head>
 <body>
 
+<div class="modal-overlay" id="setup-modal">
+  <div class="modal-card">
+    <h2>Configure Your Legend</h2>
+    <p>Setup your custom profile parameters before taking your first spin</p>
+    
+    <div class="form-group">
+      <label class="form-label" for="player-name-input">Player Name</label>
+      <input class="form-input" type="text" id="player-name-input" maxlength="20" placeholder="e.g. The Tennis GOAT" value="Your Player">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Difficulty Settings</label>
+      <div class="toggle-wrapper" onclick="toggleHardModeSwitch()">
+        <div class="toggle-info">
+          <span class="toggle-title">Hard Mode</span>
+          <span class="toggle-desc">Metric scores remain hidden until drafted</span>
+        </div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="hard-mode-checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="startGameSession()">Confirm & Start</button>
+  </div>
+</div>
+
 <div class="hdr">
   <div class="hdr-eye">ATP Top 10 (2000–2025)</div>
   <h1>BUILD THE GOAT</h1>
@@ -329,7 +485,7 @@ body{
       <h3>🏆 Build Complete!</h3>
       <p>Your ultimate player is assembled.</p>
     </div>
-    <div class="db-title">Your Player</div>
+    <div class="db-title" id="db-player-title">Your Player</div>
     <div class="db-sub" id="db-sub">0 / 8 attributes drafted</div>
     <div id="db-slots"></div>
     <div class="db-overall">
@@ -368,8 +524,27 @@ let state = {
   currentYear: null,
   currentPlayer: null,
   drafted: {},
-  hasDraftedThisSpin: false // ← Keeps track of selections per spin round
+  hasDraftedThisSpin: false,
+  playerName: "Your Player",
+  hardMode: false
 };
+
+// ── MODAL SETUP ENGINE ───────────────────────────────────────────────────────
+function toggleHardModeSwitch() {
+  const cb = document.getElementById('hard-mode-checkbox');
+  cb.checked = !cb.checked;
+}
+
+function startGameSession() {
+  let nameInput = document.getElementById('player-name-input').value.trim();
+  if (nameInput.length === 0) nameInput = "Your Player";
+  
+  state.playerName = nameInput.substring(0, 20); // enforce strict 20 char max
+  state.hardMode = document.getElementById('hard-mode-checkbox').checked;
+  
+  document.getElementById('db-player-title').textContent = state.playerName;
+  document.getElementById('setup-modal').classList.add('hidden');
+}
 
 // ── ENGINE INITIALIZATION ────────────────────────────────────────────────────
 async function loadTennisData() {
@@ -395,7 +570,6 @@ async function loadTennisData() {
         RAW[yearStr] = {};
       }
       
-      // 2. Updated to use your new CSV column headers
       RAW[yearStr][player] = {
         rank: row.rank,
         country: row.player_country,
@@ -405,8 +579,8 @@ async function loadTennisData() {
         pressure: row.pressure_score,
         forehand: row.forehand_score,
         backhand: row.backhand_score,
-        volley: row.net_game_score,     // Map 'net_game_score' to your internal volley key
-        movement: row.movement_score    // Map your new 'movement_score' column
+        volley: row.net_game_score,     
+        movement: row.movement_score    
       };
     });
 
@@ -428,7 +602,6 @@ function initGame() {
   renderDraftBoard();
 }
 
-// Fire async workflow on page load
 window.onload = loadTennisData;
 
 // ── REEL UI BUILDERS ─────────────────────────────────────────────────────────
@@ -462,7 +635,8 @@ function buildPlayerReel(year) {
 function doSpin() {
   if (state.spinning) return;
   if (YEARS.length === 0) return;
-  if (Object.keys(state.drafted).length === 7) {
+  
+  if (Object.keys(state.drafted).length === 8) {
     setStatus('All 8 attributes drafted! Start over to play again.', true);
     return;
   }
@@ -483,19 +657,15 @@ function doSpin() {
   const targetPlayerIdx = Math.floor(Math.random() * players.length);
   const [targetPlayerName, targetPlayerData] = players[targetPlayerIdx];
 
-  // Regrow the dynamic player list for the selected year block
   buildPlayerReel(targetYear);
 
-  // Spin the year reel, and grab its freshly cloned element node
   const activeYearReel = spinReelCSS('reel-year', YEARS.length, targetYearIdx, 3);
   
-  // Spin the player reel, passing a callback that fires when it finishes settling
   spinReelCSS('reel-player', players.length, targetPlayerIdx, 4, () => {
     state.spinning = false;
     state.currentYear = targetYear;
     state.currentPlayer = targetPlayerName;
     
-    // Safely shift the independent Year Reel structural view back to its baseline single-loop index position
     if (activeYearReel) {
       activeYearReel.style.transition = 'none';
       activeYearReel.style.transform = `translate3d(0, -${(YEARS.length + targetYearIdx) * ITEM_H}px, 0)`;
@@ -510,7 +680,6 @@ function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
   const reel = document.getElementById(reelId);
   if (!reel) return null;
 
-  // Clone the element node cleanly to flush stale hardware transform tracking states
   const newReel = reel.cloneNode(true);
   reel.parentNode.replaceChild(newReel, reel);
 
@@ -518,14 +687,11 @@ function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
   const landOffset = startOffset + (targetIdx * ITEM_H);
   const finalScrollDistance = (loops * totalItems * ITEM_H) + landOffset;
 
-  // Place instantly at structural initialization coordinates
   newReel.style.transition = 'none';
   newReel.style.transform = `translate3d(0, -${startOffset}px, 0)`;
 
-  // Force reflow layout updates before releasing the animation path execution
   newReel.offsetHeight;
 
-  // Engage native GPU transition
   newReel.style.transition = 'transform 2.8s cubic-bezier(0.15, 0.85, 0.35, 1)';
   newReel.style.transform = `translate3d(0, -${finalScrollDistance}px, 0)`;
 
@@ -534,7 +700,6 @@ function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
       if (e.propertyName === 'transform') {
         newReel.removeEventListener('transitionend', handleEnd);
         
-        // Return to unified base structural coordinates without causing layout flickering
         newReel.style.transition = 'none';
         newReel.style.transform = `translate3d(0, -${startOffset + (targetIdx * ITEM_H)}px, 0)`;
         
@@ -543,7 +708,6 @@ function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
     });
   }
 
-  // Pass element node tracking reference back out to the main event pipeline loop
   return newReel;
 }
 
@@ -558,7 +722,7 @@ function showResult(name, year, data) {
   renderAttrCards(data);
   document.getElementById('attr-section').style.display = 'block';
 
-  const remaining = 7 - Object.keys(state.drafted).length;
+  const remaining = 8 - Object.keys(state.drafted).length;
   setStatus(`Pick an attribute from ${name} (${year}) · ${remaining} left to draft`, true);
 }
 
@@ -575,22 +739,21 @@ function renderAttrCards(data) {
   ATTRS.forEach(a => {
     const score = data[a.key];
     const isThisCardDrafted = !!state.drafted[a.key];
-    
-    // The card is unclickable if it's permanently drafted, OR if another card was chosen this spin
     const isLockedOut = isThisCardDrafted || state.hasDraftedThisSpin; 
     
     const pct = (score / 10) * 100;
-    const sc = scoreClass(score);
-    const card = document.createElement('div');
     
-    // Adds the 'drafted' CSS class to fade the card out if it's locked or permanently used
+    // Hard Mode Check: determine formatting rules
+    const displayScore = (state.hardMode) ? "???" : score.toFixed(1);
+    const sc = (state.hardMode) ? "score-hidden" : scoreClass(score);
+    
+    const card = document.createElement('div');
     card.className = `attr-card ${sc}${isLockedOut ? ' drafted' : ''}`;
     card.innerHTML = `
       <div class="ac-name">${a.icon} ${a.label}</div>
-      <div class="ac-score">${score.toFixed(1)}<sup>/10</sup></div>
-      <div class="ac-bar"><div class="ac-fill" style="width:${pct}%"></div></div>`;
+      <div class="ac-score">${displayScore}${state.hardMode ? '' : '<sup>/10</sup>'}</div>
+      <div class="ac-bar"><div class="ac-fill" style="width:${state.hardMode ? '100' : pct}%"></div></div>`;
     
-    // Only bind the click event if the entire board isn't locked down
     if (!isLockedOut) {
       card.onclick = () => draftAttr(a, score);
     }
@@ -601,10 +764,8 @@ function renderAttrCards(data) {
 
 // ── DRAFT BOARD ENGINE ───────────────────────────────────────────────────────
 function draftAttr(attr, score) {
-  // If they already picked something from this specific spin, ignore further clicks
   if (state.hasDraftedThisSpin) return;
   
-  // Set the flag to lock choices until the next spin
   state.hasDraftedThisSpin = true;
 
   state.drafted[attr.key] = {
@@ -620,7 +781,7 @@ function draftAttr(attr, score) {
   const data = RAW[state.currentYear][state.currentPlayer];
   renderAttrCards(data);
 
-  const remaining = 8 - Object.keys(state.drafted).length; // ← Change 7 to 8
+  const remaining = 8 - Object.keys(state.drafted).length;
   if (remaining === 0) {
     setStatus('🏆 Player complete! Your GOAT is assembled.', true);
     document.getElementById('complete-banner').classList.add('show');
@@ -680,13 +841,28 @@ function renderDraftBoard() {
 }
 
 function resetGame() {
-  state = {spinning:false, currentYear:null, currentPlayer:null, drafted:{}, hasDraftedThisSpin:false};
+  state = {
+    spinning: false, 
+    currentYear: null, 
+    currentPlayer: null, 
+    drafted: {}, 
+    hasDraftedThisSpin: false,
+    playerName: "Your Player",
+    hardMode: false
+  };
+  
   document.getElementById('result-panel').classList.remove('show');
   document.getElementById('attr-section').style.display = 'none';
   document.getElementById('complete-banner').classList.remove('show');
   document.getElementById('spin-btn').disabled = false;
   document.getElementById('db-ov-val').textContent = '—';
   document.getElementById('db-ov-fill').style.width = '0%';
+  
+  // Wipe configuration inputs and re-display startup setup modal
+  document.getElementById('player-name-input').value = "Your Player";
+  document.getElementById('hard-mode-checkbox').checked = false;
+  document.getElementById('setup-modal').classList.remove('hidden');
+  
   buildYearReel();
   if (typeof YEARS !== 'undefined' && YEARS.length > 0) {
     buildPlayerReel(YEARS[0]);
