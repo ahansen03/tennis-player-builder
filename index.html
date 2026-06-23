@@ -431,9 +431,7 @@ body{
   margin-bottom: 15px;
 }
 .sim-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
+  display: block;
   margin-bottom: 20px;
 }
 .sim-card {
@@ -562,12 +560,11 @@ body{
 
     <!-- ── SIMULATE SEASON RESULTS DISPLAY ── -->
     <div class="sim-results-area" id="sim-results-area">
-      <div class="sim-header" id="sim-results-header">Season Simulation Results</div>
+      <div class="sim-header" id="sim-results-header">Season Simulation Results (Majors and Masters)</div>
       <div class="sim-grid" id="sim-grid"></div>
       <div class="sim-summary">
         <div>
           <div class="sim-summary-title" id="sim-summary-points">Final Points: —</div>
-          <div style="font-size: 11px; color: var(--chalk-dim); margin-top: 2px;">Includes base + calculation bonuses</div>
         </div>
         <div class="sim-summary-rank" id="sim-summary-rank">Rank: —</div>
       </div>
@@ -711,7 +708,7 @@ async function loadTennisData() {
 
 async function loadSimulationAssets() {
   // Load current top players
-  fetch('./current_top_players.csv')
+  fetch('./current_top_players')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, dynamicTyping: true, skipEmptyLines: true }).data.forEach(r => {
@@ -720,7 +717,7 @@ async function loadSimulationAssets() {
     }).catch(e => console.error("Error loading current_top_players.csv", e));
 
   // Load Best of Three Scores
-  fetch('./tennis_best_of_three_all_scores.csv')
+  fetch('./tennis_best_of_three_all_scores')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, skipEmptyLines: true }).data.forEach(r => {
@@ -730,7 +727,7 @@ async function loadSimulationAssets() {
     }).catch(e => console.error("Error loading tennis_best_of_three_all_scores.csv", e));
 
   // Load Best of Five Scores
-  fetch('./best_of_five_all_scores.csv')
+  fetch('./best_of_five_all_scores')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, skipEmptyLines: true }).data.forEach(r => {
@@ -989,6 +986,21 @@ function simulateSeason() {
   const outputGrid = document.getElementById('sim-grid');
   outputGrid.innerHTML = '';
 
+  // Create sections for Majors and Masters
+  outputGrid.innerHTML = `
+    <div style="grid-column: 1 / -1; margin-bottom: 24px;">
+      <h3 style="font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); margin-bottom:12px; letter-spacing:1px; text-transform:uppercase;">🏆 Grand Slams & Finals</h3>
+      <div id="majors-subgrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;"></div>
+    </div>
+    <div style="grid-column: 1 / -1; margin-bottom: 20px;">
+      <h3 style="font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--clay-light); margin-bottom:12px; letter-spacing:1px; text-transform:uppercase;">🎾 ATP Masters 1000</h3>
+      <div id="masters-subgrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;"></div>
+    </div>
+  `;
+
+  const majorsGrid = document.getElementById('majors-subgrid');
+  const mastersGrid = document.getElementById('masters-subgrid');
+
   EVENTS.forEach(event => {
     let outcome = "";
     let score = "";
@@ -1055,7 +1067,6 @@ function simulateSeason() {
       }
     } 
     else if (event.type === "TF") {
-      // ATP Finals - 3 RR matches, SF, Final
       let roundRobinWins = 0;
       for (let i = 0; i < 3; i++) {
         if (Math.random() < prob) roundRobinWins++;
@@ -1066,11 +1077,10 @@ function simulateSeason() {
         outcome = "Lost in Group Stage";
         score = "—";
       } else {
-        // Made it to Semifinals
         if (Math.random() < prob) {
-          pointsEarned += 400; // SF Win
+          pointsEarned += 400; 
           if (Math.random() < prob) {
-            pointsEarned += 500; // Final Win
+            pointsEarned += 500; 
             outcome = "Champion 🏆";
             opponent = getOpponentByRankRange(1, 10);
             score = getRandomScore(true, false);
@@ -1094,9 +1104,16 @@ function simulateSeason() {
     card.innerHTML = `
       <div class="sim-card-name">${event.name}</div>
       <div class="sim-card-result">${outcome} (+${pointsEarned} pts)</div>
-      <div class="sim-card-score">${opponent ? `vs. ${opponent.name} (#${opponent.rank}) | Score: ${score}` : `Score: ${score}`}</div>
+      <div class="sim-card-score" style="margin-top: 4px;">${opponent ? `vs. ${opponent.name} (#${opponent.rank})` : ''}</div>
+      <div class="sim-card-score" style="color: var(--gold); font-size: 11px; margin-top: 2px;">Score: ${score}</div>
     `;
-    outputGrid.appendChild(card);
+
+    // Append to the correct category section
+    if (event.type === "GS" || event.type === "TF") {
+      majorsGrid.appendChild(card);
+    } else {
+      mastersGrid.appendChild(card);
+    }
   });
 
   // Calculate bonus points equation 
