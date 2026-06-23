@@ -632,8 +632,8 @@ body{
 let RAW = {};
 let YEARS = [];
 let TOP_PLAYERS = [];
-let SCORES_BO3 = { W: [], L: [] };
-let SCORES_BO5 = { W: [], L: [] };
+let SCORES_BO3 = [];
+let SCORES_BO5 = [];
 
 const EVENTS = [
   { name: "Australian Open", type: "GS" },
@@ -742,7 +742,7 @@ async function loadTennisData() {
 
 async function loadSimulationAssets() {
   // Load current top players
-  fetch('./current_top_players')
+  fetch('./current_top_players.csv')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, dynamicTyping: true, skipEmptyLines: true }).data.forEach(r => {
@@ -750,24 +750,24 @@ async function loadSimulationAssets() {
       });
     }).catch(e => console.error("Error loading current_top_players.csv", e));
 
-  // Load Best of Three Scores
+  // Load Best of Three Scores (pure list of scores)
   fetch('./tennis_best_of_three_all_scores.csv')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, skipEmptyLines: true }).data.forEach(r => {
-        if(r.result === 'W') SCORES_BO3.W.push(r.score);
-        if(r.result === 'L') SCORES_BO3.L.push(r.score);
+        if (r.score) SCORES_BO3.push(String(r.score).trim());
       });
+      console.log(`Loaded ${SCORES_BO3.length} Best-of-3 scores.`);
     }).catch(e => console.error("Error loading tennis_best_of_three_all_scores.csv", e));
 
-  // Load Best of Five Scores
+  // Load Best of Five Scores (pure list of scores)
   fetch('./tennis_best_of_five_all_scores.csv')
     .then(res => res.text())
     .then(txt => {
       Papa.parse(txt, { header: true, skipEmptyLines: true }).data.forEach(r => {
-        if(r.result === 'W') SCORES_BO5.W.push(r.score);
-        if(r.result === 'L') SCORES_BO5.L.push(r.score);
+        if (r.score) SCORES_BO5.push(String(r.score).trim());
       });
+      console.log(`Loaded ${SCORES_BO5.length} Best-of-5 scores.`);
     }).catch(e => console.error("Error loading tennis_best_of_five_all_scores.csv", e));
 }
 
@@ -1060,17 +1060,20 @@ function simulateSeason() {
         outcome = "Champion";
         pointsEarned = 2000;
         opponent = getOpponentByRankRange(1, 10);
-        score = getRandomScore(true, true);
       } else {
-        if (currentRound === 1) { outcome = "Round of 128"; pointsEarned = 10; opponent = getOpponentByRankRange(50, 100); }
-        else if (currentRound === 2) { outcome = "Round of 64"; pointsEarned = 50; opponent = getOpponentByRankRange(51, 100); }
-        else if (currentRound === 3) { outcome = "Round of 32"; pointsEarned = 100; opponent = getOpponentByRankRange(1, 50); }
-        else if (currentRound === 4) { outcome = "Round of 16"; pointsEarned = 200; opponent = getOpponentByRankRange(1, 50); }
-        else if (currentRound === 5) { outcome = "Quarterfinals"; pointsEarned = 400; opponent = getOpponentByRankRange(1, 10); }
-        else if (currentRound === 6) { outcome = "Semifinals"; pointsEarned = 800; opponent = getOpponentByRankRange(1, 10); }
-        else if (currentRound === 7) { outcome = "Runner-Up"; pointsEarned = 1300; opponent = getOpponentByRankRange(1, 10); }
-        score = getRandomScore(false, true);
+        if (currentRound === 1) { outcome = "Round of 128"; pointsEarned = 10; opponent = getOpponentByRankRange(61, 100); }
+        else if (currentRound === 2) { outcome = "Round of 64"; pointsEarned = 50; opponent = getOpponentByRankRange(46, 60); }
+        else if (currentRound === 3) { outcome = "Round of 32"; pointsEarned = 100; opponent = getOpponentByRankRange(31, 45); }
+        else if (currentRound === 4) { outcome = "Round of 16"; pointsEarned = 200; opponent = getOpponentByRankRange(16, 30); }
+        else if (currentRound === 5) { outcome = "Quarterfinals"; pointsEarned = 400; opponent = getOpponentByRankRange(9, 15); }
+        else if (currentRound === 6) { outcome = "Semifinals"; pointsEarned = 800; opponent = getOpponentByRankRange(2, 8); }
+        else if (currentRound === 7) { outcome = "Runner-Up"; pointsEarned = 1300; opponent = getOpponentByRankRange(1, 8); }
       }
+      
+      // Pull directly from the simplified flat arrays (always a winning layout perspective)
+      score = SCORES_BO5.length > 0 
+        ? SCORES_BO5[Math.floor(Math.random() * SCORES_BO5.length)] 
+        : "6-4 6-3 6-2";
     } 
     else if (event.type === "M1000") {
       // Masters 1000 - 6 rounds
@@ -1090,16 +1093,19 @@ function simulateSeason() {
         outcome = "Champion";
         pointsEarned = 1000;
         opponent = getOpponentByRankRange(1, 10);
-        score = getRandomScore(true, false);
       } else {
-        if (currentRound === 1) { outcome = "Round of 64"; pointsEarned = 10; opponent = getOpponentByRankRange(51, 100); }
-        else if (currentRound === 2) { outcome = "Round of 32"; pointsEarned = 45; opponent = getOpponentByRankRange(51, 100); }
-        else if (currentRound === 3) { outcome = "Round of 16"; pointsEarned = 90; opponent = getOpponentByRankRange(1, 50); }
-        else if (currentRound === 4) { outcome = "Quarterfinals"; pointsEarned = 180; opponent = getOpponentByRankRange(1, 50); }
-        else if (currentRound === 5) { outcome = "Semifinals"; pointsEarned = 360; opponent = getOpponentByRankRange(1, 10); }
-        else if (currentRound === 6) { outcome = "Runner-Up"; pointsEarned = 600; opponent = getOpponentByRankRange(1, 10); }
-        score = getRandomScore(false, false);
+        if (currentRound === 1) { outcome = "Round of 64"; pointsEarned = 10; opponent = getOpponentByRankRange(61, 100); }
+        else if (currentRound === 2) { outcome = "Round of 32"; pointsEarned = 45; opponent = getOpponentByRankRange(46, 60); }
+        else if (currentRound === 3) { outcome = "Round of 16"; pointsEarned = 90; opponent = getOpponentByRankRange(31, 45); }
+        else if (currentRound === 4) { outcome = "Quarterfinals"; pointsEarned = 180; opponent = getOpponentByRankRange(9, 30); }
+        else if (currentRound === 5) { outcome = "Semifinals"; pointsEarned = 360; opponent = getOpponentByRankRange(2, 8); }
+        else if (currentRound === 6) { outcome = "Runner-Up"; pointsEarned = 600; opponent = getOpponentByRankRange(1, 8); }
       }
+      
+      // Pull directly from the simplified flat arrays (always a winning layout perspective)
+      score = SCORES_BO3.length > 0 
+        ? SCORES_BO3[Math.floor(Math.random() * SCORES_BO3.length)] 
+        : "6-4 6-3";
     } 
     else if (event.type === "TF") {
       let roundRobinWins = 0;
@@ -1118,17 +1124,19 @@ function simulateSeason() {
             pointsEarned += 500; 
             outcome = "Champion";
             opponent = getOpponentByRankRange(1, 10);
-            score = getRandomScore(true, false);
           } else {
             outcome = "Runner-Up";
             opponent = getOpponentByRankRange(1, 10);
-            score = getRandomScore(false, false);
           }
         } else {
           outcome = "Semifinals";
           opponent = getOpponentByRankRange(1, 10);
-          score = getRandomScore(false, false);
         }
+        
+        // Pull directly from the simplified flat arrays (always a winning layout perspective)
+        score = SCORES_BO3.length > 0 
+          ? SCORES_BO3[Math.floor(Math.random() * SCORES_BO3.length)] 
+          : "6-4 6-3";
       }
     }
 
@@ -1145,10 +1153,10 @@ function simulateSeason() {
     // Construct text string using your player's configured profile name
     let detailText = "";
     if (isWin) {
-      detailText = `F: ${state.playerName} def. ${opponent ? opponent.name : 'Opponent'}: ${score}`;
+      detailText = `Final: ${state.playerName} def. ${opponent ? opponent.name : 'Opponent'}: ${score}`;
     } else {
-      if (event.type === "TF" && outcome === "Lost in Group Stage") {
-        detailText = `Group Stage Exit | Score: ${score}`;
+      if (event.type === "TF" && outcome === "Group Stage") {
+        detailText = `Group Stage Exit`;
       } else {
         detailText = `${roundLabel}: ${opponent ? opponent.name : 'Opponent'} def. ${state.playerName}: ${score}`;
       }
