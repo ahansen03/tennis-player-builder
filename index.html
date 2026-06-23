@@ -166,6 +166,100 @@ body{
 }
 .start-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
 
+/* ── SEASON SIMULATOR RESULTS OVERLAY ── */
+.sim-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(6, 14, 28, 0.97);
+  backdrop-filter: blur(10px);
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.sim-overlay.hidden { display: none; }
+.sim-card {
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--clay);
+  max-width: 700px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+}
+.sim-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sim-header h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 1px;
+  color: var(--chalk);
+}
+.sim-summary-strip {
+  background: var(--navy-mid);
+  padding: 16px 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.sim-summary-box .lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+  letter-spacing: 1px;
+}
+.sim-summary-box .val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  color: var(--gold);
+  margin-top: 2px;
+}
+.sim-scroll-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.sim-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sim-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+}
+.sim-event-info { display: flex; flex-direction: column; }
+.sim-event-name { font-size: 13px; font-weight: 600; color: var(--chalk); }
+.sim-event-detail { font-size: 11px; color: var(--chalk-dim); margin-top: 2px; }
+.sim-event-points { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--green-bright); text-align: right; }
+.sim-event-points.won { color: var(--gold); font-weight: bold; }
+.sim-close-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  background: var(--red);
+  color: var(--chalk);
+  border: none;
+  padding: 10px 24px;
+  cursor: pointer;
+  clip-path: polygon(4px 0%,100% 0%,calc(100% - 4px) 100%,0% 100%);
+}
+.sim-close-btn:hover { background: #ff6363; }
+
 /* ── HEADER ── */
 .hdr{text-align:center;padding:22px 16px 0}
 .hdr-eye{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--clay);margin-bottom:5px}
@@ -283,121 +377,597 @@ body{
   flex-shrink:0;
 }
 .rp-badge-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);line-height:1}
-.rp-badge-lbl{font-size:9px;color:var(--chalk-dim);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+.rp-badge-lbl">Year-end rank</div>
+        </div>
+      </div>
+    </div>
 
-/* ── ATTRIBUTE GRID ── */
-.attr-section{width:100%}
-.attr-section-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--clay);margin-bottom:10px}
+    <div class="attr-section" id="attr-section" style="display:none">
+      <div class="attr-section-lbl">Pick an attribute to draft</div>
+      <div class="attr-grid" id="attr-grid"></div>
+    </div>
 
-.attr-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
-  gap:8px;
+  </div>
+
+  <div class="draft-board">
+    <div class="complete-banner" id="complete-banner">
+      <h3>🏆 Build Complete!</h3>
+      <p>Your ultimate player is assembled.</p>
+      <button class="start-btn" id="sim-season-btn" style="background:var(--green); color:var(--chalk); margin-top:8px;" onclick="simulateSeason()">⚡ Simulate Season</button>
+    </div>
+    <div class="db-title" id="db-player-title">Your Player</div>
+    <div class="db-sub" id="db-sub">0 / 8 attributes drafted</div>
+    <div id="db-slots"></div>
+    <div class="db-overall">
+      <div class="db-ov-row">
+        <span class="db-ov-lbl">Avg Rating</span>
+        <span class="db-ov-val" id="db-ov-val">—</span>
+      </div>
+      <div class="db-ov-bar"><div class="db-ov-fill" id="db-ov-fill" style="width:0%"></div></div>
+    </div>
+    <button class="reset-btn" onclick="resetGame()">↺ Start Over</button>
+  </div>
+
+</div>
+
+<!-- ── SEASON SIMULATION PERFORMANCE OVERLAY ── -->
+<div class="sim-overlay hidden" id="sim-modal">
+  <div class="sim-card">
+    <div class="sim-header">
+      <h2 id="sim-title-name">Season Performance</h2>
+      <button class="sim-close-btn" onclick="closeSimModal()">Close Results</button>
+    </div>
+    <div class="sim-summary-strip">
+      <div class="sim-summary-box">
+        <div class="lbl">Final Points</div>
+        <div class="val" id="sim-final-pts">0</div>
+      </div>
+      <div class="sim-summary-box">
+        <div class="lbl">Year-End Rank</div>
+        <div class="val" id="sim-final-rank">—</div>
+      </div>
+      <div class="sim-summary-box">
+        <div class="lbl">Titles Won</div>
+        <div class="val" id="sim-final-titles">0</div>
+      </div>
+    </div>
+    <div class="sim-scroll-body">
+      <div class="sim-grid" id="sim-results-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA AND CONFIG ─────────────────────────────────────────────────────────
+let RAW = {};
+let YEARS = [];
+let TOP_PLAYERS = [];
+let SCORES_BO3 = [];
+let SCORES_BO5 = [];
+
+const ATTRS = [
+  {key:'overall',  label:'Overall',  icon:'👑'},
+  {key:'serve',    label:'Serve',    icon:'⚡'},
+  {key:'return',   label:'Return',   icon:'🔄'},
+  {key:'pressure', label:'Pressure', icon:'🔥'},
+  {key:'forehand', label:'Forehand', icon:'🎾'},
+  {key:'backhand', label:'Backhand', icon:'↩️'},
+  {key:'volley',   label:'Volley',   icon:'🥅'},
+  {key:'movement', label:'Movement', icon:'🏃'}
+];
+
+const TOURNEY_SCHEDULE = [
+  { name: "Australian Open", type: "Slam" },
+  { name: "Indian Wells Open", type: "Masters" },
+  { name: "Miami Open", type: "Masters" },
+  { name: "Monte-Carlo Masters", type: "Masters" },
+  { name: "Madrid Open", type: "Masters" },
+  { name: "Italian Open", type: "Masters" },
+  { name: "French Open", type: "Slam" },
+  { name: "Wimbledon", type: "Slam" },
+  { name: "Canadian Open", type: "Masters" },
+  { name: "Cincinnati Open", type: "Masters" },
+  { name: "US Open", type: "Slam" },
+  { name: "Shanghai Masters", type: "Masters" },
+  { name: "Paris Masters", type: "Masters" },
+  { name: "ATP Finals", type: "Finals" }
+];
+
+const ITEM_H = 72;
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  spinning: false,
+  currentYear: null,
+  currentPlayer: null,
+  drafted: {},
+  hasDraftedThisSpin: false,
+  playerName: "Your Player",
+  hardMode: false,
+  calculatedOverall: 0
+};
+
+// ── MODAL SETUP ENGINE ───────────────────────────────────────────────────────
+function toggleHardModeSwitch() {
+  const cb = document.getElementById('hard-mode-checkbox');
+  cb.checked = !cb.checked;
 }
 
-.attr-card{
-  background:var(--navy-mid);
-  border:1px solid var(--border);
-  padding:12px 14px;
-  cursor:pointer;
-  position:relative;
-  overflow:hidden;
-  transition:border-color .18s,transform .12s;
+function startGameSession() {
+  let nameInput = document.getElementById('player-name-input').value.trim();
+  if (nameInput.length === 0) nameInput = "Your Player";
+  
+  state.playerName = nameInput.substring(0, 20);
+  state.hardMode = document.getElementById('hard-mode-checkbox').checked;
+  
+  document.getElementById('db-player-title').textContent = state.playerName;
+  document.getElementById('setup-modal').classList.add('hidden');
 }
-.attr-card::after{
-  content:'';position:absolute;bottom:0;left:0;height:2px;width:0;
-  background:var(--gold);transition:width .25s;
+
+// ── ENGINE INITIALIZATION & DATA LOADING ─────────────────────────────────────
+async function loadTennisData() {
+  try {
+    // Load Core Historical Attributes Database
+    const response = await fetch('./final_data.csv');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const csvText = await response.text();
+    
+    Papa.parse(csvText, { 
+      header: true, dynamicTyping: true, skipEmptyLines: true,
+      step: function(row) {
+        const r = row.data;
+        if (!r.year || !r.player_name) return;
+        const yStr = r.year.toString();
+        if (!RAW[yStr]) RAW[yStr] = {};
+        RAW[yStr][r.player_name] = {
+          rank: r.rank, country: r.player_country, overall: r.overall_score,
+          serve: r.serve_score, return: r.return_score, pressure: r.pressure_score,
+          forehand: r.forehand_score, backhand: r.backhand_score, volley: r.net_game_score,     
+          movement: r.movement_score    
+        };
+      },
+      complete: function() {
+        YEARS = Object.keys(RAW).sort();
+        initGame();
+      }
+    });
+
+    // Async Fetch Supporting Simulation Datasets from Github Pipelines
+    fetch('./current_top_players.csv').then(res => res.text()).then(txt => {
+      TOP_PLAYERS = Papa.parse(txt, { header: true, dynamicTyping: true, skipEmptyLines: true }).data;
+    });
+    fetch('./tennis_best_of_three_all_scores.csv').then(res => res.text()).then(txt => {
+      SCORES_BO3 = Papa.parse(txt, { header: true, skipEmptyLines: true }).data;
+    });
+    fetch('./tennis_best_of_five_all_scores.csv').then(res => res.text()).then(txt => {
+      SCORES_BO5 = Papa.parse(txt, { header: true, skipEmptyLines: true }).data;
+    });
+    
+  } catch (error) {
+    console.error("Error loading base file dependencies:", error);
+    document.getElementById('status').textContent = "Initialization error. Check CSV database links.";
+  }
 }
-.attr-card:hover:not(.drafted)::after{width:100%}
-.attr-card:hover:not(.drafted){border-color:rgba(212,175,55,.4);transform:translateY(-1px)}
-.attr-card.drafted{
-  opacity:.28;cursor:not-allowed;pointer-events:none;
+
+function initGame() {
+  buildYearReel();
+  if (YEARS.length > 0) buildPlayerReel(YEARS[0]);
+  setStatus('Spin to draw a player');
+  renderDraftBoard();
 }
-.attr-card.drafted::after{display:none}
 
-.ac-name{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--chalk-dim);margin-bottom:5px}
-.ac-score{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--chalk)}
-.ac-score sup{font-size:13px;color:var(--chalk-dim)}
-.ac-bar{background:rgba(255,255,255,0.07);height:3px;border-radius:2px;margin-top:7px}
-.ac-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green),var(--gold));transition:width .5s ease}
+window.onload = loadTennisData;
 
-.score-low .ac-fill{background:linear-gradient(90deg,#7a2020,#c45050)}
-.score-mid .ac-fill{background:linear-gradient(90deg,#6b5010,var(--clay))}
-.score-high .ac-fill{background:linear-gradient(90deg,var(--green),var(--gold))}
-.score-hidden .ac-fill{background:linear-gradient(90deg,#4a5568,#718096)}
-
-/* ── STATUS ── */
-.status{
-  font-size:12px;color:var(--chalk-dim);
-  font-style:italic;text-align:center;min-height:18px;
+// ── REEL UI BUILDERS ─────────────────────────────────────────────────────────
+function buildYearReel() {
+  const reel = document.getElementById('reel-year');
+  if (!reel || YEARS.length === 0) return;
+  const items = [...YEARS,...YEARS,...YEARS];
+  reel.innerHTML = items.map(y=>`<div class="slot-item"><div class="slot-item-inner year-item">${y}</div></div>`).join('');
+  reel.style.transform = `translate3d(0, -${YEARS.length * ITEM_H}px, 0)`;
 }
-.status.hi{color:var(--gold);font-style:normal;font-weight:500}
 
-/* ── DRAFT BOARD ── */
-.draft-board{
-  background:var(--navy-card);
-  border:1px solid var(--border);
-  border-top:3px solid var(--clay);
-  padding:18px;
-  position:sticky;top:16px;height:fit-content;
+function buildPlayerReel(year) {
+  const reel = document.getElementById('reel-player');
+  if (!reel || !RAW[year]) return;
+  const players = Object.entries(RAW[year]).sort((a,b)=>a[1].rank-b[1].rank);
+  const items = [...players,...players,...players];
+  reel.innerHTML = items.map(([name,d])=>`
+    <div class="slot-item">
+      <div class="slot-item-inner">
+        <div class="player-item">${name}</div>
+        <div class="player-item-sub">${d.country} · #${d.rank}</div>
+      </div>
+    </div>`).join('');
+  reel.style.transform = `translate3d(0, -${players.length * ITEM_H}px, 0)`;
 }
-.db-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--chalk)}
-.db-sub{font-size:11px;color:var(--chalk-dim);font-weight:300;margin-bottom:14px}
 
-.db-slot{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 0;
-  border-bottom:1px solid var(--border);
+// ── SPIN ENGINE ──────────────────────────────────────────────────────────────
+function doSpin() {
+  if (state.spinning) return;
+  if (YEARS.length === 0) return;
+  
+  if (Object.keys(state.drafted).length === 8) {
+    setStatus('All 8 attributes drafted! Start over to play again.', true);
+    return;
+  }
+
+  state.spinning = true;
+  document.getElementById('spin-btn').disabled = true;
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('attr-section').style.display = 'none';
+  state.hasDraftedThisSpin = false;
+  setStatus('Spinning...');
+
+  const targetYearIdx = Math.floor(Math.random() * YEARS.length);
+  const targetYear = YEARS[targetYearIdx];
+  const players = Object.entries(RAW[targetYear]).sort((a,b)=>a[1].rank-b[1].rank);
+  const targetPlayerIdx = Math.floor(Math.random() * players.length);
+  const [targetPlayerName, targetPlayerData] = players[targetPlayerIdx];
+
+  buildPlayerReel(targetYear);
+  const activeYearReel = spinReelCSS('reel-year', YEARS.length, targetYearIdx, 3);
+  
+  spinReelCSS('reel-player', players.length, targetPlayerIdx, 4, () => {
+    state.spinning = false;
+    state.currentYear = targetYear;
+    state.currentPlayer = targetPlayerName;
+    
+    if (activeYearReel) {
+      activeYearReel.style.transition = 'none';
+      activeYearReel.style.transform = `translate3d(0, -${(YEARS.length + targetYearIdx) * ITEM_H}px, 0)`;
+    }
+
+    showResult(targetPlayerName, targetYear, targetPlayerData);
+    document.getElementById('spin-btn').disabled = false;
+  });
 }
-.db-slot:last-of-type{border-bottom:none}
 
-.db-icon{
-  width:32px;height:32px;
-  background:var(--navy-light);
-  border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;flex-shrink:0;border-radius:2px;
+function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
+  const reel = document.getElementById(reelId);
+  if (!reel) return null;
+  const newReel = reel.cloneNode(true);
+  reel.parentNode.replaceChild(newReel, reel);
+  const startOffset = totalItems * ITEM_H;
+  const landOffset = startOffset + (targetIdx * ITEM_H);
+  const finalScrollDistance = (loops * totalItems * ITEM_H) + landOffset;
+
+  newReel.style.transition = 'none';
+  newReel.style.transform = `translate3d(0, -${startOffset}px, 0)`;
+  newReel.offsetHeight;
+  newReel.style.transition = 'transform 2.8s cubic-bezier(0.15, 0.85, 0.35, 1)';
+  newReel.style.transform = `translate3d(0, -${finalScrollDistance}px, 0)`;
+
+  if (onDone) {
+    newReel.addEventListener('transitionend', function handleEnd(e) {
+      if (e.propertyName === 'transform') {
+        newReel.removeEventListener('transitionend', handleEnd);
+        newReel.style.transition = 'none';
+        newReel.style.transform = `translate3d(0, -${startOffset + (targetIdx * ITEM_H)}px, 0)`;
+        onDone();
+      }
+    });
+  }
+  return newReel;
 }
-.db-icon.filled{background:var(--green);border-color:var(--green-bright)}
 
-.db-info{flex:1;min-width:0}
-.db-attr-name{font-family:'DM Mono',monospace;font-size:9px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:1px}
-.db-player{font-size:12px;font-weight:600;color:var(--chalk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.db-empty{font-size:11px;color:rgba(255,255,255,.18);font-style:italic}
-.db-score{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);flex-shrink:0}
-.db-score.empty{color:rgba(255,255,255,.15)}
+function showResult(name, year, data) {
+  document.getElementById('rp-name').textContent = name;
+  document.getElementById('rp-year').textContent = year;
+  document.getElementById('rp-meta').textContent = `${data.country} · ${year} ATP Year-End`;
+  document.getElementById('rp-rank').textContent = `#${data.rank}`;
+  document.getElementById('result-panel').classList.add('show');
 
-/* overall */
-.db-overall{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
-.db-ov-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-.db-ov-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--clay);text-transform:uppercase;letter-spacing:2px}
-.db-ov-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold)}
-.db-ov-bar{background:rgba(255,255,255,.07);height:5px;border-radius:3px}
-.db-ov-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--clay),var(--gold));transition:width .7s ease}
-
-.reset-btn{
-  margin-top:12px;width:100%;
-  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;
-  background:transparent;color:var(--chalk-dim);
-  border:1px solid rgba(255,255,255,.09);padding:9px;cursor:pointer;
-  transition:border-color .18s,color .18s;
+  renderAttrCards(data);
+  document.getElementById('attr-section').style.display = 'block';
+  const remaining = 8 - Object.keys(state.drafted).length;
+  setStatus(`Pick an attribute from ${name} (${year}) · ${remaining} left to draft`, true);
 }
-.reset-btn:hover{border-color:var(--red);color:var(--red)}
 
-/* complete */
-.complete-banner{
-  display:none;
-  background:linear-gradient(135deg,rgba(45,90,39,.6),rgba(18,32,64,.8));
-  border:1px solid var(--gold);
-  padding:12px 16px;text-align:center;margin-bottom:14px;
+function scoreClass(v) {
+  if (v < 3.5) return 'score-low';
+  if (v < 6.5) return 'score-mid';
+  return 'score-high';
 }
-.complete-banner.show{display:block}
-.complete-banner h3{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--gold)}
-.complete-banner p{font-size:11px;color:var(--chalk-dim);margin-top:2px}
-</style>
-</head>
-<body>
 
+function renderAttrCards(data) {
+  const grid = document.getElementById('attr-grid');
+  grid.innerHTML = '';
+  
+  ATTRS.forEach(a => {
+    const score = data[a.key];
+    const isThisCardDrafted = !!state.drafted[a.key];
+    const isLockedOut = isThisCardDrafted || state.hasDraftedThisSpin; 
+    const pct = (score / 10) * 100;
+    
+    const displayScore = (state.hardMode) ? "???" : score.toFixed(1);
+    const sc = (state.hardMode) ? "score-hidden" : scoreClass(score);
+    
+    const card = document.createElement('div');
+    card.className = `attr-card ${sc}${isLockedOut ? ' drafted' : ''}`;
+    card.innerHTML = `
+      <div class="ac-name">${a.icon} ${a.label}</div>
+      <div class="ac-score">${displayScore}${state.hardMode ? '' : '<sup>/10</sup>'}</div>
+      <div class="ac-bar"><div class="ac-fill" style="width:${state.hardMode ? '100' : pct}%"></div></div>`;
+    
+    if (!isLockedOut) card.onclick = () => draftAttr(a, score);
+    grid.appendChild(card);
+  });
+}
+
+// ── DRAFT BOARD ENGINE ───────────────────────────────────────────────────────
+function draftAttr(attr, score) {
+  if (state.hasDraftedThisSpin) return;
+  state.hasDraftedThisSpin = true;
+
+  state.drafted[attr.key] = {
+    player: state.currentPlayer, year: state.currentYear, score, label: attr.label, icon: attr.icon,
+  };
+  
+  renderDraftBoard();
+  const data = RAW[state.currentYear][state.currentPlayer];
+  renderAttrCards(data);
+
+  const remaining = 8 - Object.keys(state.drafted).length;
+  if (remaining === 0) {
+    setStatus('🏆 Player complete! Your GOAT is assembled.', true);
+    document.getElementById('complete-banner').classList.add('show');
+    document.getElementById('spin-btn').disabled = true;
+  } else {
+    setStatus(`${attr.label} drafted! Spin again to unlock your next selection.`, true);
+  }
+}
+
+function renderDraftBoard() {
+  const container = document.getElementById('db-slots');
+  if (!container) return;
+  container.innerHTML = '';
+  let total = 0, count = 0;
+
+  ATTRS.forEach(a => {
+    const d = state.drafted[a.key];
+    const slot = document.createElement('div');
+    slot.className = 'db-slot';
+    if (d) {
+      total += d.score; count++;
+      slot.innerHTML = `
+        <div class="db-icon filled">${a.icon}</div>
+        <div class="db-info">
+          <div class="db-attr-name">${a.label}</div>
+          <div class="db-player">${d.player} '${String(d.year).slice(-2)}</div>
+        </div>
+        <div class="db-score">${d.score.toFixed(1)}</div>`;
+    } else {
+      slot.innerHTML = `
+        <div class="db-icon">${a.icon}</div>
+        <div class="db-info">
+          <div class="db-attr-name">${a.label}</div>
+          <div class="db-empty">Not drafted</div>
+        </div>
+        <div class="db-score empty">—</div>`;
+    }
+    container.appendChild(slot);
+  });
+
+  const subEl = document.getElementById('db-sub');
+  if (subEl) subEl.textContent = `${count} / 8 attributes drafted`;
+
+  const ovValEl = document.getElementById('db-ov-val');
+  const ovFillEl = document.getElementById('db-ov-fill');
+
+  if (count > 0) {
+    const avg = total / count;
+    state.calculatedOverall = avg;
+    if (ovValEl) ovValEl.textContent = avg.toFixed(2);
+    if (ovFillEl) ovFillEl.style.width = `${(avg/10)*100}%`;
+  } else {
+    state.calculatedOverall = 0;
+    if (ovValEl) ovValEl.textContent = '—';
+    if (ovFillEl) ovFillEl.style.width = '0%';
+  }
+}
+
+// ── SEASON SIMULATION LOGIC ──────────────────────────────────────────────────
+function getOpponent(lowRank, highRank) {
+  if (!TOP_PLAYERS || TOP_PLAYERS.length === 0) return { player_name: "Random Qualifier", rank: 78 };
+  const pool = TOP_PLAYERS.filter(p => p.rank >= lowRank && p.rank <= highRank);
+  if (pool.length === 0) return TOP_PLAYERS[Math.floor(Math.random() * TOP_PLAYERS.length)];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function getScore(isWin, isBestOfFive) {
+  const pool = isBestOfFive ? SCORES_BO5 : SCORES_BO3;
+  const targetType = isWin ? 'W' : 'L';
+  const matching = pool.filter(s => s.result === targetType);
+  if (matching.length === 0) return isWin ? "6-4 6-3" : "4-6 3-6";
+  return matching[Math.floor(Math.random() * matching.length)].score;
+}
+
+function calculateRank(points) {
+  if (points >= 11000) return "1";
+  if (points >= 8500) return "2";
+  if (points >= 6500) return "3";
+  if (points >= 5000) return "4";
+  if (points >= 4000) return "5";
+  if (points >= 3300) return "8";
+  if (points >= 2500) return "12";
+  if (points >= 1800) return "20";
+  if (points >= 1200) return "35";
+  if (points >= 800) return "50";
+  return "100+";
+}
+
+function simulateSeason() {
+  const pMatch = state.calculatedOverall / 10;
+  let accumulatedPoints = 0;
+  let titlesCount = 0;
+  const resultsGrid = document.getElementById('sim-results-grid');
+  resultsGrid.innerHTML = '';
+
+  TOURNEY_SCHEDULE.forEach(event => {
+    let roundReached = "";
+    let basePointsWon = 0;
+    let opponent = "";
+    let scoreDisplay = "";
+    let totalRounds = event.type === "Slam" ? 7 : (event.type === "Finals" ? 5 : 6);
+    let isBestOfFive = event.type === "Slam";
+    let ranWinCount = 0;
+
+    // Simulate match arrays sequentially round-by-round
+    for (let r = 1; r <= totalRounds; r++) {
+      if (Math.random() <= pMatch) {
+        ranWinCount++;
+      } else {
+        break;
+      }
+    }
+
+    if (event.type === "Slam") {
+      const slamPoints = [0, 10, 50, 100, 200, 400, 800, 1300, 2000];
+      basePointsWon = slamPoints[ranWinCount];
+      
+      if (ranWinCount === 7) {
+        roundReached = "Champion 🏆"; titlesCount++;
+        opponent = getOpponent(1, 10);
+        scoreDisplay = getScore(true, isBestOfFive);
+      } else {
+        roundReached = `Lost in R${ranWinCount + 1}`;
+        if (ranWinCount === 6) roundReached = "Runner-Up 🥈";
+        
+        if (ranWinCount < 2) opponent = getOpponent(51, 100);
+        else if (ranWinCount < 4) opponent = getOpponent(11, 50);
+        else opponent = getOpponent(1, 10);
+        scoreDisplay = getScore(false, isBestOfFive);
+      }
+    } else if (event.type === "Masters") {
+      const mastersPoints = [0, 10, 30, 50, 100, 200, 400, 650, 1000];
+      basePointsWon = mastersPoints[ranWinCount];
+
+      if (ranWinCount === 6) {
+        roundReached = "Champion 🏆"; titlesCount++;
+        opponent = getOpponent(1, 10);
+        scoreDisplay = getScore(true, isBestOfFive);
+      } else {
+        roundReached = `Lost in R${ranWinCount + 1}`;
+        if (ranWinCount === 5) roundReached = "Runner-Up 🥈";
+        
+        if (ranWinCount < 2) opponent = getOpponent(51, 100);
+        else if (ranWinCount < 4) opponent = getOpponent(11, 50);
+        else opponent = getOpponent(1, 10);
+        scoreDisplay = getScore(false, isBestOfFive);
+      }
+    } else if (event.type === "Finals") {
+      // Tour Finals Custom Logic Engine
+      if (ranWinCount < 3) {
+        roundReached = "Lost in Group Stage";
+        basePointsWon = ranWinCount * 200;
+        opponent = null;
+        scoreDisplay = "";
+      } else if (ranWinCount === 3) {
+        roundReached = "Lost in Semifinals";
+        basePointsWon = 400;
+        opponent = getOpponent(1, 10);
+        scoreDisplay = getScore(false, isBestOfFive);
+      } else if (ranWinCount === 4) {
+        roundReached = "Runner-Up 🥈";
+        basePointsWon = 800;
+        opponent = getOpponent(1, 10);
+        scoreDisplay = getScore(false, isBestOfFive);
+      } else {
+        roundReached = "Champion 🏆"; titlesCount++;
+        basePointsWon = 1500;
+        opponent = getOpponent(1, 10);
+        scoreDisplay = getScore(true, isBestOfFive);
+      }
+    }
+
+    accumulatedPoints += basePointsWon;
+
+    // Render Simulation Card HTML Nodes Inline
+    const row = document.createElement('div');
+    row.className = 'sim-row';
+    
+    let detailText = opponent ? `${roundReached} to ${opponent.player_name} (#${opponent.rank}) · Score: ${scoreDisplay}` : roundReached;
+    if (roundReached.includes("Champion")) {
+      detailText = `Defeated ${opponent.player_name} (#${opponent.rank}) in Final · Score: ${scoreDisplay}`;
+    }
+
+    row.innerHTML = `
+      <div class="sim-event-info">
+        <span class="sim-event-name">${event.name}</span>
+        <span class="sim-event-detail">${detailText}</span>
+      </div>
+      <div class="sim-event-points ${roundReached.includes("Champion") ? 'won' : ''}">+${basePointsWon} pts</div>
+    `;
+    resultsGrid.appendChild(row);
+  });
+
+  // Execute Bonus Points Modifier Expression
+  const bonusPoints = Math.round((state.calculatedOverall / 10) * 3000);
+  const totalSeasonPoints = accumulatedPoints + bonusPoints;
+  const finalYearEndRank = calculateRank(totalSeasonPoints);
+
+  // Bind Metrics out to display fields
+  document.getElementById('sim-title-name').textContent = `${state.playerName} · Career Season Results`;
+  document.getElementById('sim-final-pts').textContent = totalSeasonPoints.toLocaleString();
+  document.getElementById('sim-final-rank').textContent = `#${finalYearEndRank}`;
+  document.getElementById('sim-final-titles').textContent = titlesCount;
+
+  // Render bonus row element block inside scrolling element container
+  const bonusRow = document.createElement('div');
+  bonusRow.className = 'sim-row';
+  bonusRow.style.borderLeft = "3px solid var(--gold)";
+  bonusRow.innerHTML = `
+    <div class="sim-event-info">
+      <span class="sim-event-name" style="color:var(--gold);">Overall Metric Baseline Bonus</span>
+      <span class="sim-event-detail">Algorithmic simulation scalar bonus index from profile ratings evaluation</span>
+    </div>
+    <div class="sim-event-points" style="color:var(--gold);">+${bonusPoints} pts</div>
+  `;
+  resultsGrid.appendChild(bonusRow);
+
+  document.getElementById('sim-modal').classList.remove('hidden');
+}
+
+function closeSimModal() {
+  document.getElementById('sim-modal').classList.add('hidden');
+}
+
+function resetGame() {
+  const savedPlayerName = state.playerName;
+  const savedHardMode = state.hardMode;
+
+  state = {
+    spinning: false, currentYear: null, currentPlayer: null, drafted: {}, hasDraftedThisSpin: false,
+    playerName: savedPlayerName, hardMode: savedHardMode, calculatedOverall: 0
+  };
+  
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('attr-section').style.display = 'none';
+  document.getElementById('complete-banner').classList.remove('show');
+  document.getElementById('spin-btn').disabled = false;
+  document.getElementById('db-ov-val').textContent = '—';
+  document.getElementById('db-ov-fill').style.width = '0%';
+  
+  document.getElementById('player-name-input').value = savedPlayerName;
+  document.getElementById('hard-mode-checkbox').checked = savedHardMode;
+  document.getElementById('setup-modal').classList.remove('hidden');
+  
+  buildYearReel();
+  if (typeof YEARS !== 'undefined' && YEARS.length > 0) buildPlayerReel(YEARS[0]);
+  setStatus('Spin to draw a player');
+  renderDraftBoard();
+}
+
+function setStatus(msg, hi=false) {
+  const el = document.getElementById('status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'status' + (hi ? ' hi' : '');
+}
+</script>
+
+<!-- INITIAL OVERLAY ENTRY CONTAINER GATES COORD START -->
 <div class="modal-overlay" id="setup-modal">
   <div class="modal-card">
     <h2>Configure Your Legend</h2>
@@ -426,457 +996,5 @@ body{
   </div>
 </div>
 
-<div class="hdr">
-  <div class="hdr-eye">ATP Top 10 (2000–2025)</div>
-  <h1>BUILD THE GOAT</h1>
-  <p class="hdr-sub">Spin and Choose Tennis Attributes to Win Big!</p>
-</div>
-
-<div class="wrap">
-
-  <div class="slots-area">
-
-    <div class="slot-machine">
-      <div class="slot-col">
-        <div class="slot-label">Year</div>
-        <div class="slot-window" id="sw-year">
-          <div class="slot-highlight"></div>
-          <div class="slot-reel" id="reel-year"></div>
-        </div>
-      </div>
-
-      <div class="slot-divider"></div>
-
-      <div class="slot-col">
-        <div class="slot-label">Player</div>
-        <div class="slot-window" id="sw-player">
-          <div class="slot-highlight"></div>
-          <div class="slot-reel" id="reel-player"></div>
-        </div>
-      </div>
-    </div>
-
-    <p class="status" id="status">Loading tennis database...</p>
-    <button class="spin-btn" id="spin-btn" onclick="doSpin()">▶ SPIN</button>
-
-    <div class="result-panel" id="result-panel">
-      <div class="rp-top">
-        <div>
-          <div class="rp-name" id="rp-name">—</div>
-          <div class="rp-year" id="rp-year">—</div>
-          <div class="rp-meta" id="rp-meta">—</div>
-        </div>
-        <div class="rp-badge">
-          <div class="rp-badge-num" id="rp-rank">—</div>
-          <div class="rp-badge-lbl">Year-end rank</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="attr-section" id="attr-section" style="display:none">
-      <div class="attr-section-lbl">Pick an attribute to draft</div>
-      <div class="attr-grid" id="attr-grid"></div>
-    </div>
-
-  </div>
-
-  <div class="draft-board">
-    <div class="complete-banner" id="complete-banner">
-      <h3>🏆 Build Complete!</h3>
-      <p>Your ultimate player is assembled.</p>
-    </div>
-    <div class="db-title" id="db-player-title">Your Player</div>
-    <div class="db-sub" id="db-sub">0 / 8 attributes drafted</div>
-    <div id="db-slots"></div>
-    <div class="db-overall">
-      <div class="db-ov-row">
-        <span class="db-ov-lbl">Avg Rating</span>
-        <span class="db-ov-val" id="db-ov-val">—</span>
-      </div>
-      <div class="db-ov-bar"><div class="db-ov-fill" id="db-ov-fill" style="width:0%"></div></div>
-    </div>
-    <button class="reset-btn" onclick="resetGame()">↺ Start Over</button>
-  </div>
-
-</div>
-
-<script>
-// ── DATA AND CONFIG ─────────────────────────────────────────────────────────
-let RAW = {};
-let YEARS = [];
-
-const ATTRS = [
-  {key:'overall',  label:'Overall',  icon:'👑'},
-  {key:'serve',    label:'Serve',    icon:'⚡'},
-  {key:'return',   label:'Return',   icon:'🔄'},
-  {key:'pressure', label:'Pressure', icon:'🔥'},
-  {key:'forehand', label:'Forehand', icon:'🎾'},
-  {key:'backhand', label:'Backhand', icon:'↩️'},
-  {key:'volley',   label:'Volley',   icon:'🥅'},
-  {key:'movement', label:'Movement', icon:'🏃'}
-];
-
-const ITEM_H = 72;
-
-// ── STATE ────────────────────────────────────────────────────────────────────
-let state = {
-  spinning: false,
-  currentYear: null,
-  currentPlayer: null,
-  drafted: {},
-  hasDraftedThisSpin: false,
-  playerName: "Your Player",
-  hardMode: false
-};
-
-// ── MODAL SETUP ENGINE ───────────────────────────────────────────────────────
-function toggleHardModeSwitch() {
-  const cb = document.getElementById('hard-mode-checkbox');
-  cb.checked = !cb.checked;
-}
-
-function startGameSession() {
-  let nameInput = document.getElementById('player-name-input').value.trim();
-  if (nameInput.length === 0) nameInput = "Your Player";
-  
-  state.playerName = nameInput.substring(0, 20); // enforce strict 20 char max
-  state.hardMode = document.getElementById('hard-mode-checkbox').checked;
-  
-  document.getElementById('db-player-title').textContent = state.playerName;
-  document.getElementById('setup-modal').classList.add('hidden');
-}
-
-// ── ENGINE INITIALIZATION ────────────────────────────────────────────────────
-async function loadTennisData() {
-  try {
-    const response = await fetch('./final_data');
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const csvText = await response.text();
-    
-    const parsed = Papa.parse(csvText, { 
-      header: true, 
-      dynamicTyping: true,
-      skipEmptyLines: true 
-    });
-    
-    parsed.data.forEach(row => {
-      const year = row.year;
-      const player = row.player_name;
-      
-      if (!year || !player) return;
-      
-      const yearStr = year.toString();
-      if (!RAW[yearStr]) {
-        RAW[yearStr] = {};
-      }
-      
-      RAW[yearStr][player] = {
-        rank: row.rank,
-        country: row.player_country,
-        overall: row.overall_score,
-        serve: row.serve_score,
-        return: row.return_score,
-        pressure: row.pressure_score,
-        forehand: row.forehand_score,
-        backhand: row.backhand_score,
-        volley: row.net_game_score,     
-        movement: row.movement_score    
-      };
-    });
-
-    YEARS = Object.keys(RAW).sort();
-    initGame();
-    
-  } catch (error) {
-    console.error("Error loading or parsing tennis CSV data:", error);
-    document.getElementById('status').textContent = "Error loading live tennis database. Verify final_data.csv exists.";
-  }
-}
-
-function initGame() {
-  buildYearReel();
-  if (YEARS.length > 0) {
-    buildPlayerReel(YEARS[0]);
-  }
-  setStatus('Spin to draw a player');
-  renderDraftBoard();
-}
-
-window.onload = loadTennisData;
-
-// ── REEL UI BUILDERS ─────────────────────────────────────────────────────────
-function buildYearReel() {
-  const reel = document.getElementById('reel-year');
-  if (!reel || YEARS.length === 0) return;
-  const items = [...YEARS,...YEARS,...YEARS];
-  reel.innerHTML = items.map(y=>`
-    <div class="slot-item">
-      <div class="slot-item-inner year-item">${y}</div>
-    </div>`).join('');
-  reel.style.transform = `translate3d(0, -${YEARS.length * ITEM_H}px, 0)`;
-}
-
-function buildPlayerReel(year) {
-  const reel = document.getElementById('reel-player');
-  if (!reel || !RAW[year]) return;
-  const players = Object.entries(RAW[year]).sort((a,b)=>a[1].rank-b[1].rank);
-  const items = [...players,...players,...players];
-  reel.innerHTML = items.map(([name,d])=>`
-    <div class="slot-item">
-      <div class="slot-item-inner">
-        <div class="player-item">${name}</div>
-        <div class="player-item-sub">${d.country} · #${d.rank}</div>
-      </div>
-    </div>`).join('');
-  reel.style.transform = `translate3d(0, -${players.length * ITEM_H}px, 0)`;
-}
-
-// ── HIGH-PERFORMANCE SPIN ENGINE ─────────────────────────────────────────────
-function doSpin() {
-  if (state.spinning) return;
-  if (YEARS.length === 0) return;
-  
-  if (Object.keys(state.drafted).length === 8) {
-    setStatus('All 8 attributes drafted! Start over to play again.', true);
-    return;
-  }
-
-  state.spinning = true;
-  document.getElementById('spin-btn').disabled = true;
-  document.getElementById('result-panel').classList.remove('show');
-  document.getElementById('attr-section').style.display = 'none';
-  
-  state.hasDraftedThisSpin = false;
-  
-  setStatus('Spinning...');
-
-  const targetYearIdx = Math.floor(Math.random() * YEARS.length);
-  const targetYear = YEARS[targetYearIdx];
-  
-  const players = Object.entries(RAW[targetYear]).sort((a,b)=>a[1].rank-b[1].rank);
-  const targetPlayerIdx = Math.floor(Math.random() * players.length);
-  const [targetPlayerName, targetPlayerData] = players[targetPlayerIdx];
-
-  buildPlayerReel(targetYear);
-
-  const activeYearReel = spinReelCSS('reel-year', YEARS.length, targetYearIdx, 3);
-  
-  spinReelCSS('reel-player', players.length, targetPlayerIdx, 4, () => {
-    state.spinning = false;
-    state.currentYear = targetYear;
-    state.currentPlayer = targetPlayerName;
-    
-    if (activeYearReel) {
-      activeYearReel.style.transition = 'none';
-      activeYearReel.style.transform = `translate3d(0, -${(YEARS.length + targetYearIdx) * ITEM_H}px, 0)`;
-    }
-
-    showResult(targetPlayerName, targetYear, targetPlayerData);
-    document.getElementById('spin-btn').disabled = false;
-  });
-}
-
-function spinReelCSS(reelId, totalItems, targetIdx, loops, onDone) {
-  const reel = document.getElementById(reelId);
-  if (!reel) return null;
-
-  const newReel = reel.cloneNode(true);
-  reel.parentNode.replaceChild(newReel, reel);
-
-  const startOffset = totalItems * ITEM_H;
-  const landOffset = startOffset + (targetIdx * ITEM_H);
-  const finalScrollDistance = (loops * totalItems * ITEM_H) + landOffset;
-
-  newReel.style.transition = 'none';
-  newReel.style.transform = `translate3d(0, -${startOffset}px, 0)`;
-
-  newReel.offsetHeight;
-
-  newReel.style.transition = 'transform 2.8s cubic-bezier(0.15, 0.85, 0.35, 1)';
-  newReel.style.transform = `translate3d(0, -${finalScrollDistance}px, 0)`;
-
-  if (onDone) {
-    newReel.addEventListener('transitionend', function handleEnd(e) {
-      if (e.propertyName === 'transform') {
-        newReel.removeEventListener('transitionend', handleEnd);
-        
-        newReel.style.transition = 'none';
-        newReel.style.transform = `translate3d(0, -${startOffset + (targetIdx * ITEM_H)}px, 0)`;
-        
-        onDone();
-      }
-    });
-  }
-
-  return newReel;
-}
-
-// ── RESULTS & CARD RENDERING ─────────────────────────────────────────────────
-function showResult(name, year, data) {
-  document.getElementById('rp-name').textContent = name;
-  document.getElementById('rp-year').textContent = year;
-  document.getElementById('rp-meta').textContent = `${data.country} · ${year} ATP Year-End`;
-  document.getElementById('rp-rank').textContent = `#${data.rank}`;
-  document.getElementById('result-panel').classList.add('show');
-
-  renderAttrCards(data);
-  document.getElementById('attr-section').style.display = 'block';
-
-  const remaining = 8 - Object.keys(state.drafted).length;
-  setStatus(`Pick an attribute from ${name} (${year}) · ${remaining} left to draft`, true);
-}
-
-function scoreClass(v) {
-  if (v < 3.5) return 'score-low';
-  if (v < 6.5) return 'score-mid';
-  return 'score-high';
-}
-
-function renderAttrCards(data) {
-  const grid = document.getElementById('attr-grid');
-  grid.innerHTML = '';
-  
-  ATTRS.forEach(a => {
-    const score = data[a.key];
-    const isThisCardDrafted = !!state.drafted[a.key];
-    const isLockedOut = isThisCardDrafted || state.hasDraftedThisSpin; 
-    
-    const pct = (score / 10) * 100;
-    
-    // Hard Mode Check: determine formatting rules
-    const displayScore = (state.hardMode) ? "???" : score.toFixed(1);
-    const sc = (state.hardMode) ? "score-hidden" : scoreClass(score);
-    
-    const card = document.createElement('div');
-    card.className = `attr-card ${sc}${isLockedOut ? ' drafted' : ''}`;
-    card.innerHTML = `
-      <div class="ac-name">${a.icon} ${a.label}</div>
-      <div class="ac-score">${displayScore}${state.hardMode ? '' : '<sup>/10</sup>'}</div>
-      <div class="ac-bar"><div class="ac-fill" style="width:${state.hardMode ? '100' : pct}%"></div></div>`;
-    
-    if (!isLockedOut) {
-      card.onclick = () => draftAttr(a, score);
-    }
-    
-    grid.appendChild(card);
-  });
-}
-
-// ── DRAFT BOARD ENGINE ───────────────────────────────────────────────────────
-function draftAttr(attr, score) {
-  if (state.hasDraftedThisSpin) return;
-  
-  state.hasDraftedThisSpin = true;
-
-  state.drafted[attr.key] = {
-    player: state.currentPlayer,
-    year: state.currentYear,
-    score,
-    label: attr.label,
-    icon: attr.icon,
-  };
-  
-  renderDraftBoard();
-
-  const data = RAW[state.currentYear][state.currentPlayer];
-  renderAttrCards(data);
-
-  const remaining = 8 - Object.keys(state.drafted).length;
-  if (remaining === 0) {
-    setStatus('🏆 Player complete! Your GOAT is assembled.', true);
-    document.getElementById('complete-banner').classList.add('show');
-    document.getElementById('spin-btn').disabled = true;
-  } else {
-    setStatus(`${attr.label} drafted! Spin again to unlock your next selection.`, true);
-  }
-}
-
-function renderDraftBoard() {
-  const container = document.getElementById('db-slots');
-  if (!container) return;
-  container.innerHTML = '';
-  let total = 0, count = 0;
-
-  if (typeof ATTRS !== 'undefined' && Array.isArray(ATTRS)) {
-    ATTRS.forEach(a => {
-      const d = state.drafted[a.key];
-      const slot = document.createElement('div');
-      slot.className = 'db-slot';
-      if (d) {
-        total += d.score; count++;
-        slot.innerHTML = `
-          <div class="db-icon filled">${a.icon}</div>
-          <div class="db-info">
-            <div class="db-attr-name">${a.label}</div>
-            <div class="db-player">${d.player} '${String(d.year).slice(-2)}</div>
-          </div>
-          <div class="db-score">${d.score.toFixed(1)}</div>`;
-      } else {
-        slot.innerHTML = `
-          <div class="db-icon">${a.icon}</div>
-          <div class="db-info">
-            <div class="db-attr-name">${a.label}</div>
-            <div class="db-empty">Not drafted</div>
-          </div>
-          <div class="db-score empty">—</div>`;
-      }
-      container.appendChild(slot);
-    });
-  }
-
-  const subEl = document.getElementById('db-sub');
-  if (subEl) subEl.textContent = `${count} / 8 attributes drafted`;
-
-  const ovValEl = document.getElementById('db-ov-val');
-  const ovFillEl = document.getElementById('db-ov-fill');
-
-  if (count > 0) {
-    const avg = (total / count).toFixed(2);
-    if (ovValEl) ovValEl.textContent = avg;
-    if (ovFillEl) ovFillEl.style.width = `${(avg/10)*100}%`;
-  } else {
-    if (ovValEl) ovValEl.textContent = '—';
-    if (ovFillEl) ovFillEl.style.width = '0%';
-  }
-}
-
-function resetGame() {
-  state = {
-    spinning: false, 
-    currentYear: null, 
-    currentPlayer: null, 
-    drafted: {}, 
-    hasDraftedThisSpin: false,
-    playerName: "Your Player",
-    hardMode: false
-  };
-  
-  document.getElementById('result-panel').classList.remove('show');
-  document.getElementById('attr-section').style.display = 'none';
-  document.getElementById('complete-banner').classList.remove('show');
-  document.getElementById('spin-btn').disabled = false;
-  document.getElementById('db-ov-val').textContent = '—';
-  document.getElementById('db-ov-fill').style.width = '0%';
-  
-  // Wipe configuration inputs and re-display startup setup modal
-  document.getElementById('player-name-input').value = "Your Player";
-  document.getElementById('hard-mode-checkbox').checked = false;
-  document.getElementById('setup-modal').classList.remove('hidden');
-  
-  buildYearReel();
-  if (typeof YEARS !== 'undefined' && YEARS.length > 0) {
-    buildPlayerReel(YEARS[0]);
-  }
-  setStatus('Spin to draw a player');
-  renderDraftBoard();
-}
-
-function setStatus(msg, hi=false) {
-  const el = document.getElementById('status');
-  if (!el) return;
-  el.textContent = msg;
-  el.className = 'status' + (hi ? ' hi' : '');
-}
-</script>
 </body>
 </html>
