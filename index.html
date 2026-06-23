@@ -330,7 +330,7 @@ body{
       <p>Your ultimate player is assembled.</p>
     </div>
     <div class="db-title">Your Player</div>
-    <div class="db-sub" id="db-sub">0 / 7 attributes drafted</div>
+    <div class="db-sub" id="db-sub">0 / 8 attributes drafted</div>
     <div id="db-slots"></div>
     <div class="db-overall">
       <div class="db-ov-row">
@@ -357,6 +357,7 @@ const ATTRS = [
   {key:'forehand', label:'Forehand', icon:'🎾'},
   {key:'backhand', label:'Backhand', icon:'↩️'},
   {key:'volley',   label:'Volley',   icon:'🥅'},
+  {key:'movement', label:'Movement', icon:'🏃'}
 ];
 
 const ITEM_H = 72;
@@ -367,13 +368,14 @@ let state = {
   currentYear: null,
   currentPlayer: null,
   drafted: {},
+  hasDraftedThisSpin: false // ← Keeps track of selections per spin round
 };
 
 // ── ENGINE INITIALIZATION ────────────────────────────────────────────────────
 async function loadTennisData() {
   try {
-    // Streamlined relative path resolution
-    const response = await fetch('./updated_tennis_data');
+    // 1. Updated path to look for final_data.csv
+    const response = await fetch('./final_data.csv');
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const csvText = await response.text();
     
@@ -394,6 +396,7 @@ async function loadTennisData() {
         RAW[yearStr] = {};
       }
       
+      // 2. Updated to use your new CSV column headers
       RAW[yearStr][player] = {
         rank: row.rank,
         country: row.player_country,
@@ -403,18 +406,17 @@ async function loadTennisData() {
         pressure: row.pressure_score,
         forehand: row.forehand_score,
         backhand: row.backhand_score,
-        volley: row.volley_score
+        volley: row.net_game_score,     // Map 'net_game_score' to your internal volley key
+        movement: row.movement_score    // Map your new 'movement_score' column
       };
     });
 
     YEARS = Object.keys(RAW).sort();
-    
-    // UI Layout initialized safely only after data array is built
     initGame();
     
   } catch (error) {
     console.error("Error loading or parsing tennis CSV data:", error);
-    document.getElementById('status').textContent = "Error loading live tennis database. Verify updated_tennis_data.csv exists.";
+    document.getElementById('status').textContent = "Error loading live tennis database. Verify final_data.csv exists.";
   }
 }
 
@@ -462,7 +464,7 @@ function doSpin() {
   if (state.spinning) return;
   if (YEARS.length === 0) return;
   if (Object.keys(state.drafted).length === 7) {
-    setStatus('All 7 attributes drafted! Start over to play again.', true);
+    setStatus('All 8 attributes drafted! Start over to play again.', true);
     return;
   }
 
@@ -470,6 +472,9 @@ function doSpin() {
   document.getElementById('spin-btn').disabled = true;
   document.getElementById('result-panel').classList.remove('show');
   document.getElementById('attr-section').style.display = 'none';
+  
+  state.hasDraftedThisSpin = false;
+  
   setStatus('Spinning...');
 
   const targetYearIdx = Math.floor(Math.random() * YEARS.length);
@@ -567,24 +572,42 @@ function scoreClass(v) {
 function renderAttrCards(data) {
   const grid = document.getElementById('attr-grid');
   grid.innerHTML = '';
+  
   ATTRS.forEach(a => {
     const score = data[a.key];
-    const isDrafted = !!state.drafted[a.key];
+    const isThisCardDrafted = !!state.drafted[a.key];
+    
+    // The card is unclickable if it's permanently drafted, OR if another card was chosen this spin
+    const isLockedOut = isThisCardDrafted || state.hasDraftedThisSpin; 
+    
     const pct = (score / 10) * 100;
     const sc = scoreClass(score);
     const card = document.createElement('div');
-    card.className = `attr-card ${sc}${isDrafted ? ' drafted' : ''}`;
+    
+    // Adds the 'drafted' CSS class to fade the card out if it's locked or permanently used
+    card.className = `attr-card ${sc}${isLockedOut ? ' drafted' : ''}`;
     card.innerHTML = `
       <div class="ac-name">${a.icon} ${a.label}</div>
       <div class="ac-score">${score.toFixed(1)}<sup>/10</sup></div>
       <div class="ac-bar"><div class="ac-fill" style="width:${pct}%"></div></div>`;
-    if (!isDrafted) card.onclick = () => draftAttr(a, score);
+    
+    // Only bind the click event if the entire board isn't locked down
+    if (!isLockedOut) {
+      card.onclick = () => draftAttr(a, score);
+    }
+    
     grid.appendChild(card);
   });
 }
 
 // ── DRAFT BOARD ENGINE ───────────────────────────────────────────────────────
 function draftAttr(attr, score) {
+  // If they already picked something from this specific spin, ignore further clicks
+  if (state.hasDraftedThisSpin) return;
+  
+  // Set the flag to lock choices until the next spin
+  state.hasDraftedThisSpin = true;
+
   state.drafted[attr.key] = {
     player: state.currentPlayer,
     year: state.currentYear,
@@ -592,17 +615,19 @@ function draftAttr(attr, score) {
     label: attr.label,
     icon: attr.icon,
   };
+  
   renderDraftBoard();
+
   const data = RAW[state.currentYear][state.currentPlayer];
   renderAttrCards(data);
 
-  const remaining = 7 - Object.keys(state.drafted).length;
+  const remaining = 8 - Object.keys(state.drafted).length; // ← Change 7 to 8
   if (remaining === 0) {
     setStatus('🏆 Player complete! Your GOAT is assembled.', true);
     document.getElementById('complete-banner').classList.add('show');
     document.getElementById('spin-btn').disabled = true;
   } else {
-    setStatus(`${attr.label} drafted! ${remaining} attribute${remaining!==1?'s':''} remaining — spin again.`, true);
+    setStatus(`${attr.label} drafted! Spin again to unlock your next selection.`, true);
   }
 }
 
@@ -640,7 +665,7 @@ function renderDraftBoard() {
   }
 
   const subEl = document.getElementById('db-sub');
-  if (subEl) subEl.textContent = `${count} / 7 attributes drafted`;
+  if (subEl) subEl.textContent = `${count} / 8 attributes drafted`;
 
   const ovValEl = document.getElementById('db-ov-val');
   const ovFillEl = document.getElementById('db-ov-fill');
@@ -656,7 +681,7 @@ function renderDraftBoard() {
 }
 
 function resetGame() {
-  state = {spinning:false, currentYear:null, currentPlayer:null, drafted:{}};
+  state = {spinning:false, currentYear:null, currentPlayer:null, drafted:{}, hasDraftedThisSpin:false};
   document.getElementById('result-panel').classList.remove('show');
   document.getElementById('attr-section').style.display = 'none';
   document.getElementById('complete-banner').classList.remove('show');
