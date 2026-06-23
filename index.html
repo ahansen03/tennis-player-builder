@@ -374,8 +374,7 @@ let state = {
 // ── ENGINE INITIALIZATION ────────────────────────────────────────────────────
 async function loadTennisData() {
   try {
-    // 1. Updated path to look for final_data.csv
-    const response = await fetch('./final_data.csv');
+    const response = await fetch('./final_data');
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const csvText = await response.text();
     
