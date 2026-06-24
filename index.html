@@ -372,29 +372,17 @@ body{
 .db-ov-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
 .db-ov-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--clay);text-transform:uppercase;letter-spacing:2px}
 .db-ov-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold)}
-.db-ov-bar"><div class="db-ov-fill" id="db-ov-fill" style="width:0%"></div></div>
+.db-ov-bar{background:rgba(255,255,255,.07);height:5px;border-radius:3px}
+.db-ov-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--clay),var(--gold));transition:width .7s ease} /* ← CHECK THIS CLOSING BRACKET */
 
 .reset-btn{
-  margin-top: 12px;
-  width: 100%;
-  display: block;                  /* Ensures it behaves consistently as a full-width block */
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  background: transparent;
-  color: var(--chalk-dim);
-  border: 1px solid rgba(255, 255, 255, .09);
-  padding: 12px 9px;               /* Increased top/bottom padding to give the text breathing room */
-  cursor: pointer;
-  transition: border-color .18s, color .18s, background-color .18s;
+  margin-top:12px;width:100%;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  background:transparent;color:var(--chalk-dim);
+  border:1px solid rgba(255,255,255,.09);padding:9px;cursor:pointer;
+  transition:border-color .18s,color .18s;
 }
-
-.reset-btn:hover{
-  border-color: var(--red);
-  color: #fff;                     /* Switches text to white on hover for better contrast */
-  background-color: rgba(224, 82, 82, 0.1); /* Adds a subtle dark red backdrop glow */
-}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
 
 /* complete */
 .complete-banner{
