@@ -1203,7 +1203,7 @@ function simulateSeason() {
     else if (event.type === "TF") {
       let roundRobinWins = 0;
       for (let i = 0; i < 3; i++) {
-        if (Math.random() < Math.pow(prob, 1.5)) roundRobinWins++;
+        if (Math.random() < Math.pow(prob, 3)) roundRobinWins++;
       }
       pointsEarned += roundRobinWins * 200;
 
