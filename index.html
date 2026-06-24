@@ -592,7 +592,7 @@ body{
       
       <!-- Surface Powerups Container Option Element -->
       <div id="powerup-section" style="margin-top: 20px; display: none;">
-        <div class="attr-section-lbl" style="color: var(--gold);">⚡ Eligible Surface Powerups (Locks roll attributes if chosen)</div>
+        <div class="attr-section-lbl" style="color: var(--gold);">⚡ Surface Powerups (Boosts ability on this surface, taken in place of other attributes)</div>
         <div class="attr-grid" id="powerup-grid"></div>
       </div>
     </div>
@@ -658,10 +658,10 @@ const EVENTS = [
 ];
 
 const ATTRS = [
-  {key:'overall',  label:'Overall',  icon:'👑'},
+  {key:'overall',  label:'Dominance',  icon:'👑'},
   {key:'serve',    label:'Serve',    icon:'⚡'},
   {key:'return',   label:'Return',   icon:'🔄'},
-  {key:'pressure', label:'Pressure', icon:'🔥'},
+  {key:'pressure', label:'Clutch Factor', icon:'🔥'},
   {key:'forehand', label:'Forehand', icon:'🎾'},
   {key:'backhand', label:'Backhand', icon:'↩️'},
   {key:'volley',   label:'Volley',   icon:'🥅'},
@@ -1060,7 +1060,7 @@ function renderDraftBoard() {
   if (enabledPowerups.length > 0) {
     const powerupBanner = document.createElement('div');
     powerupBanner.style.cssText = "margin-top:12px; padding:8px 10px; background: rgba(212,175,55,0.06); border:1px dashed var(--gold); font-size:11px; display:flex; justify-content:space-between; align-items:center;";
-    powerupBanner.innerHTML = `<span style="font-family:'DM Mono', monospace; text-transform:uppercase; color:var(--gold)">Surface Perks:</span> <span>${enabledPowerups.join(' ')}</span>`;
+    powerupBanner.innerHTML = `<span style="font-family:'DM Mono', monospace; text-transform:uppercase; color:var(--gold)">Surface Boosts:</span> <span>${enabledPowerups.join(' ')}</span>`;
     container.appendChild(powerupBanner);
   }
 
