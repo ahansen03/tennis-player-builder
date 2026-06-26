@@ -910,6 +910,7 @@ function scoreClass(v) {
   return 'score-high';
 }
 
+// ─── NEW UPDATED CODE ───
 function renderAttrCards(data) {
   const grid = document.getElementById('attr-grid');
   grid.innerHTML = '';
@@ -920,15 +921,18 @@ function renderAttrCards(data) {
     const isLockedOut = isThisCardDrafted || state.hasDraftedThisSpin; 
     const pct = (score / 10) * 100;
     
-    const displayScore = (state.hardMode) ? "?" : score.toFixed(1);
-    const sc = (state.hardMode) ? "score-hidden" : scoreClass(score);
+    // NEW: Only hide the score if hardMode is active AND they haven't picked yet for this spin
+    const shouldHide = state.hardMode && !state.hasDraftedThisSpin;
+    
+    const displayScore = shouldHide ? "?" : score.toFixed(1);
+    const sc = shouldHide ? "score-hidden" : scoreClass(score);
     
     const card = document.createElement('div');
     card.className = `attr-card ${sc}${isLockedOut ? ' drafted' : ''}`;
     card.innerHTML = `
       <div class="ac-name">${a.icon} ${a.label}</div>
-      <div class="ac-score">${displayScore}${state.hardMode ? '' : '<sup>/10</sup>'}</div>
-      <div class="ac-bar"><div class="ac-fill" style="width:${state.hardMode ? '100' : pct}%"></div></div>`;
+      <div class="ac-score">${displayScore}${shouldHide ? '' : '<sup>/10</sup>'}</div>
+      <div class="ac-bar"><div class="ac-fill" style="width:${shouldHide ? '100' : pct}%"></div></div>`;
     
     if (!isLockedOut) {
       card.onclick = () => draftAttr(a, score);
